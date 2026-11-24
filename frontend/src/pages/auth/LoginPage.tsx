@@ -38,7 +38,9 @@ export function LoginPage() {
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-sm border border-[var(--oqh-border)] p-8">
           <div className="text-center mb-8">
-            <img src="/logo.svg" alt="Open Quality Hub" className="h-20 mx-auto" />
+            <img src="/logo.svg" alt="" className="h-20 mx-auto" />
+            <h1 className="sr-only">Open Quality Hub</h1>
+            <p className="text-xs text-[var(--oqh-text-muted)] mt-1">Quality Engineering Platform</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

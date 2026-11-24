@@ -436,7 +436,7 @@ test.describe('Layout & Sidebar', () => {
   test('sidebar highlights active page', async ({ page }) => {
     await page.goto('/teams');
     const teamsLink = page.getByRole('link', { name: 'Teams' });
-    await expect(teamsLink).toHaveClass(/bg-blue-50/);
+    await expect(teamsLink).toHaveClass(/bg-\[var\(--oqh-active-bg\)\]/);
   });
 
   test('sidebar shows user info', async ({ page }) => {

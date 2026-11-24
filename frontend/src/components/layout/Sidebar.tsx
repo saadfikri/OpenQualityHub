@@ -25,7 +25,8 @@ export function Sidebar() {
   return (
     <aside className="w-64 border-r border-[var(--oqh-border)] bg-white min-h-screen flex flex-col">
       <div className="px-4 py-5 border-b border-[var(--oqh-border)]">
-        <img src="/sidebar-logo.svg" alt="Open Quality Hub" className="h-14 w-auto" />
+        <img src="/sidebar-logo.svg" alt="" className="h-14 w-auto" />
+        <h1 className="sr-only">Open Quality Hub</h1>
         <p className="text-[11px] text-[var(--oqh-text-muted)] mt-0.5 pl-0.5">Quality Engineering Platform</p>
       </div>
       <nav className="px-3 py-4 space-y-0.5 flex-1" aria-label="Main navigation">
