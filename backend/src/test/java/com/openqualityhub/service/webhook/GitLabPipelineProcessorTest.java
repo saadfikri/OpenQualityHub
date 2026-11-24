@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openqualityhub.entity.*;
 import com.openqualityhub.repository.TestRunRepository;
+import com.openqualityhub.service.ContributorService;
 import com.openqualityhub.service.impl.TestIdentityService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,9 @@ class GitLabPipelineProcessorTest {
     @Mock
     private TestIdentityService testIdentityService;
 
+    @Mock
+    private ContributorService contributorService;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private GitLabPipelineProcessor processor;
@@ -42,7 +46,7 @@ class GitLabPipelineProcessorTest {
     @BeforeEach
     void setUp() {
         processor = new GitLabPipelineProcessor(
-                testRunCreator, gitLabApiClient, objectMapper, testRunRepository, testIdentityService);
+                testRunCreator, gitLabApiClient, objectMapper, testRunRepository, testIdentityService, contributorService);
     }
 
     @Test
