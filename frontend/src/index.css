@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+:root {
+  /* Brand identity */
+  --oqh-primary: #083B66;
+  --oqh-primary-hover: #062E52;
+  --oqh-teal: #00A6A0;
+  --oqh-green: #44B42A;
+  --oqh-blue: #2477F3;
+
+  /* Status & charts */
+  --oqh-success: #12B76A;
+  --oqh-info: #2477F3;
+  --oqh-warning: #F59E0B;
+  --oqh-danger: #EF4444;
+
+  /* Neutrals */
+  --oqh-text: #14243B;
+  --oqh-text-muted: #66758D;
+  --oqh-page: #F5F8FC;
+  --oqh-surface: #FFFFFF;
+  --oqh-border: #E0E7EF;
+  --oqh-active-bg: #EAF3FF;
+  --oqh-shadow: 0 4px 18px rgba(14, 43, 73, 0.055);
+
+  /* Legacy compatibility */
+  --color-primary: #083B66;
+  --color-primary-hover: #062E52;
+  --color-success: #12B76A;
+  --color-danger: #EF4444;
+  --color-warning: #F59E0B;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

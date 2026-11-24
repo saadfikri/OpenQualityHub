@@ -1,0 +1,14 @@
+spring:
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  flyway:
+    baseline-on-migrate: false
+
+logging:
+  level:
+    com.openqualityhub: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN

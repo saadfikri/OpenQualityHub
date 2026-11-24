@@ -1,0 +1,60 @@
+# === Dependencies & Build ===
+node_modules/
+target/
+dist/
+build/
+.mvn/
+!.mvn/wrapper/maven-wrapper.jar
+
+# === IDE ===
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+*.swp
+*.swo
+*~
+
+# === OS ===
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# === Env & Secrets ===
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# === Test artifacts ===
+test-results/
+playwright-report/
+coverage/
+*.lcov
+jacoco/
+
+# === Logs ===
+*.log
+logs/
+
+# === Internal docs & notes (not for public repo) ===
+docs/
+!docs/screenshots/
+scripts/
+.remember/
+.claude/
+PROFILE_README.md
+CHANGELOG.md
+
+# === Temp ===
+tmp/
+*.tmp

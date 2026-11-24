@@ -1,0 +1,11 @@
+**/node_modules
+**/target
+**/dist
+**/.DS_Store
+.git
+docs/
+.claude/
+.remember/
+*.md
+!README.md
+!CONTRIBUTING.md

@@ -1,0 +1,136 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Run tests
+        working-directory: backend
+        run: mvn verify -B -Dspring.profiles.active=test
+        env:
+          JWT_SECRET: dGVzdC1zZWNyZXQta2V5LWZvci1jaS1waXBlbGluZS1vbmx5LW5vdC1mb3ItcHJvZHVjdGlvbg==
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: backend/target/surefire-reports/
+
+      - name: Upload JaCoCo coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-coverage-report
+          path: backend/target/site/jacoco/
+
+      - name: Generate JaCoCo coverage badge
+        if: success()
+        uses: cicirello/jacoco-badge-generator@v2
+        with:
+          jacoco-csv-file: backend/target/site/jacoco/jacoco.csv
+          badges-directory: .github/badges
+          generate-branches-badge: true
+          generate-summary: true
+
+      - name: Upload coverage badge
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-badges
+          path: .github/badges/
+
+  frontend:
+    name: Frontend Build & Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Type check
+        working-directory: frontend
+        run: npx tsc -b
+
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+
+  e2e:
+    name: Frontend E2E Tests
+    runs-on: ubuntu-latest
+    needs: [frontend]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        working-directory: frontend
+        run: npx playwright test
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 14
+
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: docker build -t openqualityhub/backend:test ./backend
+
+      - name: Build frontend image
+        run: docker build -t openqualityhub/frontend:test ./frontend

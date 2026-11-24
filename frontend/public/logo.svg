@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 770 170" role="img" aria-labelledby="logo-title logo-desc">
+  <title id="logo-title">Open Quality Hub — Quality Engineering Platform</title>
+  <desc id="logo-desc">Brand mark with connected engineering nodes, gear, checkmark and blue-green wordmark.</desc>
+  <g transform="translate(10 15) scale(1.15)">
+    <circle cx="60" cy="60" r="43" fill="none" stroke="#00A6A0" stroke-width="7"/>
+    <path d="M60.00,31.00 L60.00,17.00" stroke="#083B66" stroke-width="6.5" stroke-linecap="round"/>
+    <path d="M85.11,45.50 L97.24,38.50" stroke="#083B66" stroke-width="6.5" stroke-linecap="round"/>
+    <path d="M85.11,74.50 L97.24,81.50" stroke="#083B66" stroke-width="6.5" stroke-linecap="round"/>
+    <path d="M60.00,89.00 L60.00,103.00" stroke="#083B66" stroke-width="6.5" stroke-linecap="round"/>
+    <path d="M34.89,74.50 L22.76,81.50" stroke="#083B66" stroke-width="6.5" stroke-linecap="round"/>
+    <path d="M34.89,45.50 L22.76,38.50" stroke="#083B66" stroke-width="6.5" stroke-linecap="round"/>
+    <polygon points="51.00,35.61 53.34,34.87 52.53,28.88 55.74,28.28 64.26,28.28 67.47,28.88 66.66,34.87 69.00,35.61 70.89,36.39 73.06,37.52 76.72,32.72 79.41,34.56 85.44,40.59 87.28,43.28 82.48,46.94 83.61,49.11 84.39,51.00 85.13,53.34 91.12,52.53 91.72,55.74 91.72,64.26 91.12,67.47 85.13,66.66 84.39,69.00 83.61,70.89 82.48,73.06 87.28,76.72 85.44,79.41 79.41,85.44 76.72,87.28 73.06,82.48 70.89,83.61 69.00,84.39 66.66,85.13 67.47,91.12 64.26,91.72 55.74,91.72 52.53,91.12 53.34,85.13 51.00,84.39 49.11,83.61 46.94,82.48 43.28,87.28 40.59,85.44 34.56,79.41 32.72,76.72 37.52,73.06 36.39,70.89 35.61,69.00 34.87,66.66 28.88,67.47 28.28,64.26 28.28,55.74 28.88,52.53 34.87,53.34 35.61,51.00 36.39,49.11 37.52,46.94 32.72,43.28 34.56,40.59 40.59,34.56 43.28,32.72 46.94,37.52 49.11,36.39" fill="#083B66"/>
+    <circle cx="60" cy="60" r="18.4" fill="#FFFFFF"/>
+    <path d="M 49.5 60.0 L 56.2 66.6 L 71 52" fill="none" stroke="#44B42A" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="60.00" cy="17.00" r="9.5" fill="#FFFFFF" stroke="#083B66" stroke-width="6"/>
+    <circle cx="97.24" cy="38.50" r="9.5" fill="#FFFFFF" stroke="#083B66" stroke-width="6"/>
+    <circle cx="97.24" cy="81.50" r="9.5" fill="#FFFFFF" stroke="#083B66" stroke-width="6"/>
+    <circle cx="60.00" cy="103.00" r="9.5" fill="#FFFFFF" stroke="#083B66" stroke-width="6"/>
+    <circle cx="22.76" cy="81.50" r="9.5" fill="#FFFFFF" stroke="#083B66" stroke-width="6"/>
+    <circle cx="22.76" cy="38.50" r="9.5" fill="#FFFFFF" stroke="#083B66" stroke-width="6"/>
+  </g>
+  <g font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif">
+    <text x="166" y="93" font-size="59" font-weight="750" letter-spacing="-1.8" fill="#083B66">Open Quality</text>
+    <text x="532" y="93" font-size="59" font-weight="750" letter-spacing="-1.8" fill="#44B42A">Hub</text>
+    <text x="168" y="129" font-size="27" font-weight="450" letter-spacing=".2" fill="#0C2744">Quality Engineering Platform</text>
+  </g>
+</svg>
