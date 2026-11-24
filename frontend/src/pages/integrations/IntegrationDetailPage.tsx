@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, Copy, CheckCircle2, XCircle, Clock, AlertTriangle,
   Activity, Power, PowerOff, RefreshCw, Trash2, Shield, Pencil, X,
-  GitBranch, Hash, Timer, ChevronDown, ChevronRight, Play,
+  GitBranch, Hash, Timer, ChevronDown, ChevronRight,
 } from 'lucide-react';
 import { integrationsApi } from '@/api/integrations';
 import type { IntegrationConfig, Page, WebhookEventItem } from '@/types/api';
