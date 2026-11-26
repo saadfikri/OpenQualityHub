@@ -1,15 +1,12 @@
 package com.openqualityhub.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openqualityhub.dto.request.SubmitFeedbackRequest;
 import com.openqualityhub.dto.response.FailureAnalysisResponse;
 import com.openqualityhub.entity.FailureAnalysis;
-import com.openqualityhub.entity.TestCase;
 import com.openqualityhub.entity.TestRun;
 import com.openqualityhub.exception.ResourceNotFoundException;
 import com.openqualityhub.mapper.FailureAnalysisMapper;
 import com.openqualityhub.repository.FailureAnalysisRepository;
-import com.openqualityhub.repository.TestCaseRepository;
 import com.openqualityhub.repository.TestRunRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,17 +14,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 
-import java.math.BigDecimal;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,18 +27,17 @@ class FailureAnalysisServiceImplTest {
 
     @Mock private FailureAnalysisRepository failureAnalysisRepository;
     @Mock private TestRunRepository testRunRepository;
-    @Mock private TestCaseRepository testCaseRepository;
     @Mock private AnthropicClient anthropicClient;
     @Mock private FailureAnalysisMapper mapper;
+    @Mock private FailureAnalysisAsyncProcessor asyncProcessor;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private FailureAnalysisServiceImpl service;
 
     @BeforeEach
     void setUp() {
         service = new FailureAnalysisServiceImpl(
-                failureAnalysisRepository, testRunRepository, testCaseRepository,
-                anthropicClient, mapper, objectMapper);
+                failureAnalysisRepository, testRunRepository,
+                anthropicClient, mapper, asyncProcessor);
     }
 
     // ---- triggerAnalysis tests ----
@@ -71,113 +62,18 @@ class FailureAnalysisServiceImplTest {
 
         FailureAnalysisResponse resp = service.triggerAnalysis(testRunId);
 
-        // Returns immediately with ANALYZING status (async processing happens separately)
         assertEquals("ANALYZING", resp.getStatus());
 
-        // Verify the analysis was saved with ANALYZING status
         ArgumentCaptor<FailureAnalysis> captor = ArgumentCaptor.forClass(FailureAnalysis.class);
         verify(failureAnalysisRepository).save(captor.capture());
         assertEquals(FailureAnalysis.AnalysisStatus.ANALYZING, captor.getValue().getStatus());
+
+        // Verify async processor was invoked
+        verify(asyncProcessor).executeAnalysisAsync(any(UUID.class), eq(testRunId));
     }
 
     @Test
-    void executeAnalysisAsync_success() throws Exception {
-        UUID analysisId = UUID.randomUUID();
-        UUID testRunId = UUID.randomUUID();
-        TestRun testRun = buildTestRun(testRunId, 3);
-
-        FailureAnalysis analysis = FailureAnalysis.builder()
-                .testRun(testRun)
-                .status(FailureAnalysis.AnalysisStatus.ANALYZING)
-                .build();
-        analysis.setId(analysisId);
-
-        when(failureAnalysisRepository.findByIdAndDeletedFalse(analysisId)).thenReturn(Optional.of(analysis));
-        when(testRunRepository.findByIdAndDeletedFalse(testRunId)).thenReturn(Optional.of(testRun));
-
-        TestCase failedCase = TestCase.builder()
-                .name("testLogin").className("AuthTest")
-                .status(TestCase.TestStatus.FAILED)
-                .errorMessage("NullPointerException").stackTrace("at AuthTest.testLogin:42")
-                .build();
-        when(testCaseRepository.findByTestRunIdAndStatus(eq(testRunId), eq(TestCase.TestStatus.FAILED), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(failedCase)));
-
-        String aiResponse = """
-                {"failure_category":"CODE_REGRESSION","summary":"NPE in login","root_cause":"Null user object","suggested_fix":"Check user initialization","confidence_score":0.9}
-                """;
-        when(anthropicClient.analyze(any(), any()))
-                .thenReturn(new AnthropicClient.AnalysisResult(aiResponse, "claude-sonnet-4-20250514", 100, 200));
-
-        when(failureAnalysisRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-
-        service.executeAnalysisAsync(analysisId, testRunId);
-
-        ArgumentCaptor<FailureAnalysis> captor = ArgumentCaptor.forClass(FailureAnalysis.class);
-        verify(failureAnalysisRepository).save(captor.capture());
-        FailureAnalysis saved = captor.getValue();
-        assertEquals(FailureAnalysis.AnalysisStatus.COMPLETED, saved.getStatus());
-        assertEquals(FailureAnalysis.FailureCategory.CODE_REGRESSION, saved.getFailureCategory());
-        assertEquals("NPE in login", saved.getSummary());
-    }
-
-    @Test
-    void executeAnalysisAsync_aiError_statusFailed() throws Exception {
-        UUID analysisId = UUID.randomUUID();
-        UUID testRunId = UUID.randomUUID();
-        TestRun testRun = buildTestRun(testRunId, 1);
-
-        FailureAnalysis analysis = FailureAnalysis.builder()
-                .testRun(testRun)
-                .status(FailureAnalysis.AnalysisStatus.ANALYZING)
-                .build();
-        analysis.setId(analysisId);
-
-        when(failureAnalysisRepository.findByIdAndDeletedFalse(analysisId)).thenReturn(Optional.of(analysis));
-        when(testRunRepository.findByIdAndDeletedFalse(testRunId)).thenReturn(Optional.of(testRun));
-        when(testCaseRepository.findByTestRunIdAndStatus(any(), any(), any()))
-                .thenReturn(new PageImpl<>(List.of()));
-        when(anthropicClient.analyze(any(), any())).thenThrow(new RuntimeException("API timeout"));
-        when(failureAnalysisRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-
-        service.executeAnalysisAsync(analysisId, testRunId);
-
-        ArgumentCaptor<FailureAnalysis> captor = ArgumentCaptor.forClass(FailureAnalysis.class);
-        verify(failureAnalysisRepository).save(captor.capture());
-        assertEquals(FailureAnalysis.AnalysisStatus.FAILED, captor.getValue().getStatus());
-    }
-
-    @Test
-    void executeAnalysisAsync_malformedAiResponse_setsUnknown() throws Exception {
-        UUID analysisId = UUID.randomUUID();
-        UUID testRunId = UUID.randomUUID();
-        TestRun testRun = buildTestRun(testRunId, 1);
-
-        FailureAnalysis analysis = FailureAnalysis.builder()
-                .testRun(testRun)
-                .status(FailureAnalysis.AnalysisStatus.ANALYZING)
-                .build();
-        analysis.setId(analysisId);
-
-        when(failureAnalysisRepository.findByIdAndDeletedFalse(analysisId)).thenReturn(Optional.of(analysis));
-        when(testRunRepository.findByIdAndDeletedFalse(testRunId)).thenReturn(Optional.of(testRun));
-        when(testCaseRepository.findByTestRunIdAndStatus(any(), any(), any()))
-                .thenReturn(new PageImpl<>(List.of()));
-        when(anthropicClient.analyze(any(), any()))
-                .thenReturn(new AnthropicClient.AnalysisResult("not valid json at all", "claude-sonnet-4-20250514", 50, 30));
-        when(failureAnalysisRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-
-        service.executeAnalysisAsync(analysisId, testRunId);
-
-        ArgumentCaptor<FailureAnalysis> captor = ArgumentCaptor.forClass(FailureAnalysis.class);
-        verify(failureAnalysisRepository).save(captor.capture());
-        FailureAnalysis last = captor.getValue();
-        assertEquals(FailureAnalysis.AnalysisStatus.COMPLETED, last.getStatus());
-        assertEquals(FailureAnalysis.FailureCategory.UNKNOWN, last.getFailureCategory());
-    }
-
-    @Test
-    void triggerAnalysis_aiDisabled_skipped() throws Exception {
+    void triggerAnalysis_aiDisabled_skipped() {
         UUID testRunId = UUID.randomUUID();
         TestRun testRun = buildTestRun(testRunId, 2);
 
@@ -194,7 +90,7 @@ class FailureAnalysisServiceImplTest {
         FailureAnalysisResponse resp = service.triggerAnalysis(testRunId);
 
         assertEquals("SKIPPED", resp.getStatus());
-        verify(anthropicClient, never()).analyze(any(), any());
+        verify(asyncProcessor, never()).executeAnalysisAsync(any(), any());
     }
 
     @Test

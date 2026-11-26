@@ -63,7 +63,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
         log.warn("Malformed request body: {}", ex.getMessage());
         return ResponseEntity.badRequest()
-            .body(ApiError.of(HttpStatus.BAD_REQUEST, "Malformed request body: " + ex.getMostSpecificCause().getMessage()));
+            .body(ApiError.of(HttpStatus.BAD_REQUEST, "Malformed request body"));
     }
 
     @ExceptionHandler(NoResourceFoundException.class)

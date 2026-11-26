@@ -65,24 +65,30 @@ public class WebhookServiceImpl implements WebhookService {
                 .build();
         event = eventRepository.save(event);
 
-        // Validate secret if configured
-        if (config.getWebhookSecret() != null && !config.getWebhookSecret().isBlank()) {
-            boolean valid;
-            if (config.getProvider() == IntegrationConfig.Provider.GITLAB) {
-                valid = validateGitLabSecret(config.getWebhookSecret(), payload, headers);
-            } else {
-                // GitHub, Jenkins, etc. use HMAC signature
-                String signature = extractSignature(config.getProvider(), headers);
-                valid = hmacValidator.validate(payload, config.getWebhookSecret(), signature);
-            }
-            if (!valid) {
-                event.setStatus(WebhookEvent.EventStatus.FAILED);
-                event.setProcessingError("Secret/signature validation failed");
-                event.setProcessedAt(Instant.now());
-                eventRepository.save(event);
-                log.warn("Secret validation failed for integration {} event {}", integrationId, event.getId());
-                return;
-            }
+        // Validate webhook secret — REQUIRED for security
+        if (config.getWebhookSecret() == null || config.getWebhookSecret().isBlank()) {
+            event.setStatus(WebhookEvent.EventStatus.FAILED);
+            event.setProcessingError("Webhook secret not configured — rejecting unsigned event");
+            event.setProcessedAt(Instant.now());
+            eventRepository.save(event);
+            log.warn("Webhook rejected for integration {} — no secret configured", integrationId);
+            return;
+        }
+
+        boolean valid;
+        if (config.getProvider() == IntegrationConfig.Provider.GITLAB) {
+            valid = validateGitLabSecret(config.getWebhookSecret(), payload, headers);
+        } else {
+            String signature = extractSignature(config.getProvider(), headers);
+            valid = hmacValidator.validate(payload, config.getWebhookSecret(), signature);
+        }
+        if (!valid) {
+            event.setStatus(WebhookEvent.EventStatus.FAILED);
+            event.setProcessingError("Secret/signature validation failed");
+            event.setProcessedAt(Instant.now());
+            eventRepository.save(event);
+            log.warn("Secret validation failed for integration {} event {}", integrationId, event.getId());
+            return;
         }
 
         // Check if integration is enabled

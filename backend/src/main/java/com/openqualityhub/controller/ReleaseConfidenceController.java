@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +31,7 @@ public class ReleaseConfidenceController {
     private final ReleaseConfidenceService releaseConfidenceService;
 
     @PostMapping("/{id}/readiness")
+    @PreAuthorize("hasAuthority('RELEASE_READINESS_WRITE')")
     @Operation(summary = "Generate a readiness report for a release")
     public ResponseEntity<ReadinessReportResponse> generateReadinessReport(
             @PathVariable UUID id, Authentication authentication) {
@@ -39,12 +41,14 @@ public class ReleaseConfidenceController {
     }
 
     @GetMapping("/{id}/readiness")
+    @PreAuthorize("hasAuthority('RELEASE_READINESS_READ')")
     @Operation(summary = "Get the latest readiness report for a release")
     public ResponseEntity<ReadinessReportResponse> getLatestReadinessReport(@PathVariable UUID id) {
         return ResponseEntity.ok(releaseConfidenceService.getLatestReadinessReport(id));
     }
 
     @GetMapping("/{id}/readiness/history")
+    @PreAuthorize("hasAuthority('RELEASE_READINESS_READ')")
     @Operation(summary = "Get readiness report history for a release")
     public ResponseEntity<Page<ReadinessReportResponse>> getReadinessHistory(
             @PathVariable UUID id,
@@ -53,6 +57,7 @@ public class ReleaseConfidenceController {
     }
 
     @PostMapping("/{id}/sign-offs")
+    @PreAuthorize("hasAuthority('RELEASE_SIGNOFF')")
     @Operation(summary = "Sign off on a release (approve or reject)")
     public ResponseEntity<SignOffResponse> signOff(
             @PathVariable UUID id,
@@ -64,12 +69,14 @@ public class ReleaseConfidenceController {
     }
 
     @GetMapping("/{id}/sign-offs")
+    @PreAuthorize("hasAuthority('RELEASE_READINESS_READ')")
     @Operation(summary = "Get all sign-offs for a release")
     public ResponseEntity<List<SignOffResponse>> getSignOffs(@PathVariable UUID id) {
         return ResponseEntity.ok(releaseConfidenceService.getSignOffs(id));
     }
 
     @GetMapping("/dashboard/readiness")
+    @PreAuthorize("hasAuthority('RELEASE_READINESS_READ')")
     @Operation(summary = "Get release readiness dashboard across all active releases")
     public ResponseEntity<ReleaseDashboardResponse> getReleaseDashboard() {
         return ResponseEntity.ok(releaseConfidenceService.getReleaseDashboard());

@@ -72,13 +72,38 @@ public class AnthropicClient {
         log.info("Sending analysis request to Anthropic API (model: {})", model);
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-        if (response.statusCode() != 200) {
-            log.error("Anthropic API error ({}): {}", response.statusCode(), response.body());
-            throw new RuntimeException("Anthropic API returned status " + response.statusCode());
+        // Retry on 429 (rate limit) and 503 (overloaded) with exponential backoff
+        int statusCode = response.statusCode();
+        if (statusCode == 429 || statusCode == 503) {
+            for (int attempt = 1; attempt <= 2; attempt++) {
+                long waitMs = 1000L * (long) Math.pow(2, attempt);
+                log.warn("Anthropic API returned {} — retrying in {}ms (attempt {}/2)", statusCode, waitMs, attempt);
+                try {
+                    Thread.sleep(waitMs);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw e;
+                }
+                response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                statusCode = response.statusCode();
+                if (statusCode == 200 || (statusCode != 429 && statusCode != 503)) break;
+            }
+        }
+
+        if (statusCode != 200) {
+            log.error("Anthropic API error ({}): {}", statusCode, response.body());
+            throw new RuntimeException("Anthropic API returned status " + statusCode);
         }
 
         JsonNode responseJson = objectMapper.readTree(response.body());
-        String content = responseJson.path("content").get(0).path("text").asText();
+        JsonNode contentArray = responseJson.path("content");
+        if (!contentArray.isArray() || contentArray.isEmpty()) {
+            throw new RuntimeException("Anthropic API returned empty content array");
+        }
+        String content = contentArray.get(0).path("text").asText("");
+        if (content.isBlank()) {
+            throw new RuntimeException("Anthropic API returned blank text content");
+        }
         String responseModel = responseJson.path("model").asText(model);
         int promptTokens = responseJson.path("usage").path("input_tokens").asInt(0);
         int completionTokens = responseJson.path("usage").path("output_tokens").asInt(0);

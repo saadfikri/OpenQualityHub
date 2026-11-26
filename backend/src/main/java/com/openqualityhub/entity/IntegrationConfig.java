@@ -36,7 +36,8 @@ public class IntegrationConfig extends BaseEntity {
     @Column(nullable = false, length = 50)
     private Provider provider;
 
-    @Column(name = "webhook_secret", length = 500)
+    @Convert(converter = com.openqualityhub.security.EncryptedStringConverter.class)
+    @Column(name = "webhook_secret", length = 1000)
     private String webhookSecret;
 
     @Column(nullable = false)

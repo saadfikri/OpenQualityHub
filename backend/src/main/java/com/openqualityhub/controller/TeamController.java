@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -26,18 +27,21 @@ public class TeamController {
     private final TeamService teamService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('TEAM_WRITE')")
     @Operation(summary = "Create a new team")
     public ResponseEntity<TeamResponse> create(@Valid @RequestBody CreateTeamRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(teamService.create(request));
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('TEAM_READ')")
     @Operation(summary = "Get a team by ID")
     public ResponseEntity<TeamResponse> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(teamService.getById(id));
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('TEAM_READ')")
     @Operation(summary = "Get all teams with pagination")
     public ResponseEntity<Page<TeamResponse>> getAll(
             @RequestParam(required = false) String search,
@@ -49,12 +53,14 @@ public class TeamController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('TEAM_WRITE')")
     @Operation(summary = "Update a team")
     public ResponseEntity<TeamResponse> update(@PathVariable UUID id, @Valid @RequestBody UpdateTeamRequest request) {
         return ResponseEntity.ok(teamService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('TEAM_DELETE')")
     @Operation(summary = "Delete a team")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         teamService.delete(id);

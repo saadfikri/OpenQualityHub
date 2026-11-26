@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -20,6 +21,7 @@ public class ExportController {
     private final ExportService exportService;
 
     @GetMapping("/test-runs")
+    @PreAuthorize("hasAuthority('TEST_RUN_READ')")
     @Operation(summary = "Export test runs as CSV")
     public ResponseEntity<byte[]> exportTestRuns(
             @RequestParam(required = false) UUID projectId) {
@@ -31,6 +33,7 @@ public class ExportController {
     }
 
     @GetMapping("/defects")
+    @PreAuthorize("hasAuthority('DEFECT_READ')")
     @Operation(summary = "Export defects as CSV")
     public ResponseEntity<byte[]> exportDefects(
             @RequestParam(required = false) UUID projectId,

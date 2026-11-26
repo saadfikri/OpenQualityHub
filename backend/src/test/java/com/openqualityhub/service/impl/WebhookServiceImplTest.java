@@ -48,6 +48,7 @@ class WebhookServiceImplTest {
             .provider(IntegrationConfig.Provider.GITHUB)
             .enabled(true)
             .eventCount(0L)
+            .webhookSecret("test-secret")
             .build();
         config.setId(integrationId);
     }
@@ -68,6 +69,7 @@ class WebhookServiceImplTest {
             if (e.getId() == null) e.setId(UUID.randomUUID());
             return e;
         });
+        when(hmacValidator.validate(any(), eq("test-secret"), any())).thenReturn(true);
         when(githubProcessor.getProvider()).thenReturn(IntegrationConfig.Provider.GITHUB);
         when(githubProcessor.supports("push")).thenReturn(true);
 
@@ -77,6 +79,26 @@ class WebhookServiceImplTest {
         verify(githubProcessor).process(any(WebhookEvent.class));
         verify(integrationRepository).save(config);
         assertEquals(1L, config.getEventCount());
+    }
+
+    @Test
+    void receive_shouldRejectWhenNoSecretConfigured() {
+        config.setWebhookSecret(null);
+        when(integrationRepository.findByIdAndDeletedFalse(integrationId)).thenReturn(Optional.of(config));
+        when(eventRepository.save(any(WebhookEvent.class))).thenAnswer(inv -> {
+            WebhookEvent e = inv.getArgument(0);
+            if (e.getId() == null) e.setId(UUID.randomUUID());
+            return e;
+        });
+
+        webhookService.receive(integrationId, "{}", Map.of("x-github-event", "push"));
+
+        ArgumentCaptor<WebhookEvent> captor = ArgumentCaptor.forClass(WebhookEvent.class);
+        verify(eventRepository, atLeast(2)).save(captor.capture());
+        WebhookEvent last = captor.getAllValues().get(captor.getAllValues().size() - 1);
+        assertEquals(WebhookEvent.EventStatus.FAILED, last.getStatus());
+        assertTrue(last.getProcessingError().contains("secret not configured"));
+        verify(githubProcessor, never()).process(any());
     }
 
     @Test
@@ -112,6 +134,7 @@ class WebhookServiceImplTest {
             if (e.getId() == null) e.setId(UUID.randomUUID());
             return e;
         });
+        when(hmacValidator.validate(any(), eq("test-secret"), any())).thenReturn(true);
 
         webhookService.receive(integrationId, "{}", Map.of("x-github-event", "push"));
 
@@ -130,6 +153,7 @@ class WebhookServiceImplTest {
             if (e.getId() == null) e.setId(UUID.randomUUID());
             return e;
         });
+        when(hmacValidator.validate(any(), eq("test-secret"), any())).thenReturn(true);
         when(githubProcessor.getProvider()).thenReturn(IntegrationConfig.Provider.GITHUB);
         when(githubProcessor.supports("unknown_event")).thenReturn(false);
 
@@ -150,6 +174,7 @@ class WebhookServiceImplTest {
             if (e.getId() == null) e.setId(UUID.randomUUID());
             return e;
         });
+        when(hmacValidator.validate(any(), eq("test-secret"), any())).thenReturn(true);
         when(githubProcessor.getProvider()).thenReturn(IntegrationConfig.Provider.GITHUB);
         when(githubProcessor.supports("push")).thenReturn(true);
         doThrow(new RuntimeException("Processing error")).when(githubProcessor).process(any());

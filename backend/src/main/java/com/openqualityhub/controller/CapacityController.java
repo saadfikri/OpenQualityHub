@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -22,6 +23,7 @@ public class CapacityController {
     private final CapacityService capacityService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('CAPACITY_WRITE')")
     @Operation(summary = "Create or update a capacity allocation")
     public ResponseEntity<Void> createOrUpdate(@Valid @RequestBody CreateCapacityAllocationRequest request) {
         capacityService.createOrUpdate(request);
@@ -29,6 +31,7 @@ public class CapacityController {
     }
 
     @GetMapping("/overview")
+    @PreAuthorize("hasAuthority('CAPACITY_READ')")
     @Operation(summary = "Get capacity overview across all teams")
     public ResponseEntity<CapacityOverviewResponse> getOverview(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekStart) {

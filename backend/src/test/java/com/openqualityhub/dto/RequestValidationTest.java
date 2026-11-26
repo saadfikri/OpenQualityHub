@@ -31,7 +31,7 @@ class RequestValidationTest {
     void registerRequest_validRequest_shouldPass() {
         RegisterRequest request = new RegisterRequest();
         request.setEmail("user@example.com");
-        request.setPassword("SecurePass123");
+        request.setPassword("SecurePass123!");
         request.setFirstName("John");
         request.setLastName("Doe");
 
@@ -43,7 +43,7 @@ class RequestValidationTest {
     void registerRequest_blankEmail_shouldFail() {
         RegisterRequest request = new RegisterRequest();
         request.setEmail("");
-        request.setPassword("SecurePass123");
+        request.setPassword("SecurePass123!");
         request.setFirstName("John");
         request.setLastName("Doe");
 
@@ -56,7 +56,7 @@ class RequestValidationTest {
     void registerRequest_invalidEmail_shouldFail() {
         RegisterRequest request = new RegisterRequest();
         request.setEmail("not-an-email");
-        request.setPassword("SecurePass123");
+        request.setPassword("SecurePass123!");
         request.setFirstName("John");
         request.setLastName("Doe");
 
@@ -95,7 +95,7 @@ class RequestValidationTest {
     void registerRequest_blankFirstName_shouldFail() {
         RegisterRequest request = new RegisterRequest();
         request.setEmail("user@example.com");
-        request.setPassword("SecurePass123");
+        request.setPassword("SecurePass123!");
         request.setFirstName("");
         request.setLastName("Doe");
 
@@ -108,7 +108,7 @@ class RequestValidationTest {
     void registerRequest_blankLastName_shouldFail() {
         RegisterRequest request = new RegisterRequest();
         request.setEmail("user@example.com");
-        request.setPassword("SecurePass123");
+        request.setPassword("SecurePass123!");
         request.setFirstName("John");
         request.setLastName("");
 

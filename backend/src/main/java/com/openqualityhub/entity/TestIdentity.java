@@ -98,6 +98,7 @@ public class TestIdentity {
         totalExecutions++;
         lastStatus = status.name();
         lastSeenAt = Instant.now();
+        updatedAt = Instant.now();
 
         switch (status) {
             case PASSED -> totalPassed++;
@@ -105,10 +106,23 @@ public class TestIdentity {
             case SKIPPED -> totalSkipped++;
         }
 
+        // Compute average duration with proper rounding (avoid Long truncation)
         if (durationMs != null && durationMs > 0) {
             avgDurationMs = avgDurationMs == null
                 ? durationMs
-                : (avgDurationMs * (totalExecutions - 1) + durationMs) / totalExecutions;
+                : Math.round((avgDurationMs * (totalExecutions - 1) + durationMs) / (double) totalExecutions);
+        }
+
+        // Compute flaky score using effective executions (exclude skipped)
+        int effectiveExecutions = totalPassed + totalFailed;
+        if (effectiveExecutions >= 3 && totalFailed > 0 && totalPassed > 0) {
+            double minCount = Math.min(totalFailed, totalPassed);
+            double score = Math.min(100.0, (minCount * 2.0 * 100.0) / effectiveExecutions);
+            flakyScore = BigDecimal.valueOf(score).setScale(2, java.math.RoundingMode.HALF_UP);
+            flaky = flakyScore.compareTo(BigDecimal.TEN) >= 0 && effectiveExecutions >= 5;
+        } else {
+            flakyScore = BigDecimal.ZERO;
+            flaky = false;
         }
     }
 }

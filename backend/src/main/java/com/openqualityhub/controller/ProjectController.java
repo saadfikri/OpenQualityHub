@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -26,18 +27,21 @@ public class ProjectController {
     private final ProjectService projectService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('PROJECT_WRITE')")
     @Operation(summary = "Create a new project")
     public ResponseEntity<ProjectResponse> create(@Valid @RequestBody CreateProjectRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(projectService.create(request));
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('PROJECT_READ')")
     @Operation(summary = "Get a project by ID")
     public ResponseEntity<ProjectResponse> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(projectService.getById(id));
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('PROJECT_READ')")
     @Operation(summary = "Get all projects with pagination")
     public ResponseEntity<Page<ProjectResponse>> getAll(
             @RequestParam(required = false) UUID teamId,
@@ -49,12 +53,14 @@ public class ProjectController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('PROJECT_WRITE')")
     @Operation(summary = "Update a project")
     public ResponseEntity<ProjectResponse> update(@PathVariable UUID id, @Valid @RequestBody UpdateProjectRequest request) {
         return ResponseEntity.ok(projectService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('PROJECT_DELETE')")
     @Operation(summary = "Delete a project")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         projectService.delete(id);

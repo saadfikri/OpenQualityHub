@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +29,7 @@ public class DefectController {
     private final DefectService defectService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('DEFECT_WRITE')")
     @Operation(summary = "Create a defect")
     public ResponseEntity<DefectResponse> create(
             @Valid @RequestBody CreateDefectRequest request,
@@ -41,6 +43,7 @@ public class DefectController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('DEFECT_WRITE')")
     @Operation(summary = "Update a defect")
     public ResponseEntity<DefectResponse> update(
             @PathVariable UUID id,
@@ -49,12 +52,14 @@ public class DefectController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('DEFECT_READ')")
     @Operation(summary = "Get a defect by ID")
     public ResponseEntity<DefectResponse> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(defectService.getById(id));
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('DEFECT_READ')")
     @Operation(summary = "List defects with pagination")
     public ResponseEntity<Page<DefectResponse>> getAll(
             @RequestParam(required = false) UUID projectId,
@@ -74,6 +79,7 @@ public class DefectController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('DEFECT_DELETE')")
     @Operation(summary = "Soft-delete a defect")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         defectService.delete(id);

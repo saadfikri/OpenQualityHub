@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -28,6 +29,7 @@ public class DocumentationController {
     private final DocumentationService documentationService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('DOC_WRITE')")
     @Operation(summary = "Register a documentation asset")
     public ResponseEntity<DocumentationAssetResponse> create(@Valid @RequestBody CreateDocumentationAssetRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -35,6 +37,7 @@ public class DocumentationController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('DOC_WRITE')")
     @Operation(summary = "Update a documentation asset")
     public ResponseEntity<DocumentationAssetResponse> update(
             @PathVariable UUID id,
@@ -43,12 +46,14 @@ public class DocumentationController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('DOC_READ')")
     @Operation(summary = "Get a documentation asset by ID")
     public ResponseEntity<DocumentationAssetResponse> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(documentationService.getById(id));
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('DOC_READ')")
     @Operation(summary = "List documentation assets")
     public ResponseEntity<Page<DocumentationAssetResponse>> getAll(
             @RequestParam(required = false) String healthStatus,
@@ -64,6 +69,7 @@ public class DocumentationController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('DOC_WRITE')")
     @Operation(summary = "Soft-delete a documentation asset")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         documentationService.delete(id);
@@ -71,12 +77,14 @@ public class DocumentationController {
     }
 
     @PostMapping("/{id}/health-checks")
+    @PreAuthorize("hasAuthority('DOC_CHECK')")
     @Operation(summary = "Run health checks on a documentation asset")
     public ResponseEntity<DocumentationAssetResponse> runHealthChecks(@PathVariable UUID id) {
         return ResponseEntity.ok(documentationService.runHealthChecks(id));
     }
 
     @PostMapping("/reviews")
+    @PreAuthorize("hasAuthority('DOC_REVIEW')")
     @Operation(summary = "Create a documentation review")
     public ResponseEntity<DocumentationAssetResponse.ReviewResponse> createReview(
             @Valid @RequestBody CreateDocumentationReviewRequest request) {
@@ -85,6 +93,7 @@ public class DocumentationController {
     }
 
     @PatchMapping("/reviews/{reviewId}")
+    @PreAuthorize("hasAuthority('DOC_REVIEW')")
     @Operation(summary = "Update review status (PENDING, IN_REVIEW, APPROVED, REJECTED, EXPIRED)")
     public ResponseEntity<DocumentationAssetResponse.ReviewResponse> updateReviewStatus(
             @PathVariable UUID reviewId,
@@ -93,6 +102,7 @@ public class DocumentationController {
     }
 
     @GetMapping("/dashboard")
+    @PreAuthorize("hasAuthority('DOC_READ')")
     @Operation(summary = "Get documentation health dashboard")
     public ResponseEntity<DocumentationDashboardResponse> getDashboard() {
         return ResponseEntity.ok(documentationService.getDashboard());

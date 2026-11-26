@@ -12,7 +12,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
-import java.util.List;
 
 @Slf4j
 @Service
@@ -21,6 +20,7 @@ public class TestIdentityService {
 
     private final TestIdentityRepository testIdentityRepository;
     private final TestExecutionRepository testExecutionRepository;
+    private final TestIdentityLookupService testIdentityLookupService;
 
     @Transactional
     public void recordExecutions(TestRun testRun) {
@@ -36,18 +36,7 @@ public class TestIdentityService {
                 testCase.getClassName(), testCase.getName(), testCase.getSuiteName()
             );
 
-            TestIdentity identity = testIdentityRepository
-                .findByProjectIdAndFingerprint(project.getId(), fingerprint)
-                .orElseGet(() -> {
-                    TestIdentity newIdentity = TestIdentity.builder()
-                        .project(project)
-                        .fingerprint(fingerprint)
-                        .className(testCase.getClassName())
-                        .testName(testCase.getName())
-                        .suiteName(testCase.getSuiteName())
-                        .build();
-                    return testIdentityRepository.save(newIdentity);
-                });
+            TestIdentity identity = testIdentityLookupService.findOrCreate(project, fingerprint, testCase);
 
             identity.recordExecution(testCase.getStatus(), testCase.getDurationMs());
             testIdentityRepository.save(identity);

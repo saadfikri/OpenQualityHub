@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +32,7 @@ public class QaRequestController {
     private final QaRequestService qaRequestService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('QA_REQUEST_WRITE')")
     @Operation(summary = "Create a QA service request")
     public ResponseEntity<QaServiceRequestResponse> create(
             @Valid @RequestBody CreateQaServiceRequestRequest request,
@@ -41,6 +43,7 @@ public class QaRequestController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('QA_REQUEST_MANAGE')")
     @Operation(summary = "Update a QA service request")
     public ResponseEntity<QaServiceRequestResponse> update(
             @PathVariable UUID id,
@@ -51,6 +54,7 @@ public class QaRequestController {
     }
 
     @PatchMapping("/{id}/transition")
+    @PreAuthorize("hasAuthority('QA_REQUEST_MANAGE')")
     @Operation(summary = "Transition request to a new status")
     public ResponseEntity<QaServiceRequestResponse> transition(
             @PathVariable UUID id,
@@ -62,6 +66,7 @@ public class QaRequestController {
     }
 
     @PatchMapping("/{id}/priority-override")
+    @PreAuthorize("hasAuthority('QA_REQUEST_OVERRIDE')")
     @Operation(summary = "Override request priority (QA Manager only)")
     public ResponseEntity<QaServiceRequestResponse> overridePriority(
             @PathVariable UUID id,
@@ -72,6 +77,7 @@ public class QaRequestController {
     }
 
     @PostMapping("/{id}/comments")
+    @PreAuthorize("hasAuthority('QA_REQUEST_WRITE')")
     @Operation(summary = "Add a comment to a request")
     public ResponseEntity<QaServiceRequestResponse> addComment(
             @PathVariable UUID id,
@@ -82,12 +88,14 @@ public class QaRequestController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('QA_REQUEST_READ')")
     @Operation(summary = "Get a QA service request by ID")
     public ResponseEntity<QaServiceRequestResponse> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(qaRequestService.getById(id));
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('QA_REQUEST_READ')")
     @Operation(summary = "List QA service requests")
     public ResponseEntity<Page<QaServiceRequestResponse>> getAll(
             @RequestParam(required = false) String status,
@@ -107,12 +115,14 @@ public class QaRequestController {
     }
 
     @GetMapping("/dashboard")
+    @PreAuthorize("hasAuthority('QA_REQUEST_READ')")
     @Operation(summary = "Get QA request dashboard statistics")
     public ResponseEntity<QaRequestDashboardResponse> getDashboard() {
         return ResponseEntity.ok(qaRequestService.getDashboard());
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('QA_REQUEST_MANAGE')")
     @Operation(summary = "Soft-delete a QA service request")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         qaRequestService.delete(id);

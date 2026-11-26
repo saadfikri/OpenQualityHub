@@ -9,6 +9,7 @@ import com.openqualityhub.entity.User;
 import com.openqualityhub.repository.OrganizationRepository;
 import com.openqualityhub.repository.RoleRepository;
 import com.openqualityhub.repository.UserRepository;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -33,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Base class for integration tests using Testcontainers with a real PostgreSQL database.
  * All Flyway migrations run against the container, providing a production-equivalent schema.
  */
+@Tag("integration")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("integration")
 @Testcontainers(disabledWithoutDocker = true)

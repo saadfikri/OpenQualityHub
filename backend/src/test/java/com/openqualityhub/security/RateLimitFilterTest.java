@@ -26,12 +26,23 @@ class RateLimitFilterTest {
 
     @BeforeEach
     void setUp() {
-        filter = new RateLimitFilter(3); // Low limit for testing
+        filter = new RateLimitFilter(3, 2, 1, 5); // Low limits for testing: auth=3, export=2, generate=1, default=5
     }
 
     @Test
-    void nonAuthPath_shouldPassThrough() throws Exception {
+    void nonAuthPath_shouldPassThroughWithDefaultLimit() throws Exception {
         when(request.getRequestURI()).thenReturn("/api/v1/projects");
+        when(request.getRemoteAddr()).thenReturn("192.168.1.100");
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        verify(filterChain).doFilter(request, response);
+        verify(response, never()).setStatus(429);
+    }
+
+    @Test
+    void nonApiPath_shouldSkipRateLimiting() throws Exception {
+        when(request.getRequestURI()).thenReturn("/swagger-ui/index.html");
 
         filter.doFilterInternal(request, response, filterChain);
 

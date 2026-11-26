@@ -12,6 +12,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,6 +27,7 @@ public class TestRunController {
     private final TestRunService testRunService;
 
     @PostMapping(value = "/import/junit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('TEST_RUN_WRITE')")
     @Operation(summary = "Import JUnit XML test results")
     public ResponseEntity<TestRunResponse> importJUnit(
             @RequestParam UUID projectId,
@@ -37,6 +39,7 @@ public class TestRunController {
     }
 
     @PostMapping(value = "/import/playwright", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('TEST_RUN_WRITE')")
     @Operation(summary = "Import Playwright JSON test results")
     public ResponseEntity<TestRunResponse> importPlaywright(
             @RequestParam UUID projectId,
@@ -48,6 +51,7 @@ public class TestRunController {
     }
 
     @PostMapping(value = "/import/webdriverio", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('TEST_RUN_WRITE')")
     @Operation(summary = "Import WebdriverIO JSON test results")
     public ResponseEntity<TestRunResponse> importWebdriverIO(
             @RequestParam UUID projectId,
@@ -59,6 +63,7 @@ public class TestRunController {
     }
 
     @PostMapping(value = "/import/cypress", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('TEST_RUN_WRITE')")
     @Operation(summary = "Import Cypress mochawesome JSON test results")
     public ResponseEntity<TestRunResponse> importCypress(
             @RequestParam UUID projectId,
@@ -70,6 +75,7 @@ public class TestRunController {
     }
 
     @PostMapping(value = "/import/testng", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('TEST_RUN_WRITE')")
     @Operation(summary = "Import TestNG XML test results")
     public ResponseEntity<TestRunResponse> importTestNG(
             @RequestParam UUID projectId,
@@ -81,12 +87,14 @@ public class TestRunController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('TEST_RUN_READ')")
     @Operation(summary = "Get a test run with all test cases")
     public ResponseEntity<TestRunDetailResponse> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(testRunService.getById(id));
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('TEST_RUN_READ')")
     @Operation(summary = "Get all test runs with pagination")
     public ResponseEntity<Page<TestRunResponse>> getAll(
             @RequestParam(required = false) UUID projectId,
@@ -98,6 +106,7 @@ public class TestRunController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('TEST_RUN_DELETE')")
     @Operation(summary = "Delete a test run")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         testRunService.delete(id);

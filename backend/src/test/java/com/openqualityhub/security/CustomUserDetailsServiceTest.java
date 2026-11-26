@@ -70,7 +70,7 @@ class CustomUserDetailsServiceTest {
     void loadUserByUsername_shouldReturnUserDetails() {
         User user = buildUserWithPermissions("TEAM_READ", "PROJECT_READ");
 
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmailAndDeletedFalse("test@example.com")).thenReturn(Optional.of(user));
 
         UserDetails details = service.loadUserByUsername("test@example.com");
 
@@ -84,7 +84,7 @@ class CustomUserDetailsServiceTest {
 
     @Test
     void loadUserByUsername_shouldThrowWhenNotFound() {
-        when(userRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
+        when(userRepository.findByEmailAndDeletedFalse("unknown@example.com")).thenReturn(Optional.empty());
 
         assertThrows(UsernameNotFoundException.class, () ->
             service.loadUserByUsername("unknown@example.com"));
@@ -94,7 +94,7 @@ class CustomUserDetailsServiceTest {
     void shouldMapPermissionsToAuthorities() {
         User user = buildUserWithPermissions("TEAM_READ", "TEAM_WRITE", "PROJECT_READ");
 
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmailAndDeletedFalse("test@example.com")).thenReturn(Optional.of(user));
 
         UserDetails details = service.loadUserByUsername("test@example.com");
 
@@ -139,7 +139,7 @@ class CustomUserDetailsServiceTest {
             .build();
         user.setId(UUID.randomUUID());
 
-        when(userRepository.findByEmail("multi@example.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmailAndDeletedFalse("multi@example.com")).thenReturn(Optional.of(user));
 
         UserDetails details = service.loadUserByUsername("multi@example.com");
 
@@ -159,7 +159,7 @@ class CustomUserDetailsServiceTest {
     void shouldReturnUserPrincipalType() {
         User user = buildUserWithPermissions("TEAM_READ");
 
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmailAndDeletedFalse("test@example.com")).thenReturn(Optional.of(user));
 
         UserDetails details = service.loadUserByUsername("test@example.com");
 
@@ -186,7 +186,7 @@ class CustomUserDetailsServiceTest {
             .build();
         user.setId(UUID.randomUUID());
 
-        when(userRepository.findByEmail("inactive@example.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmailAndDeletedFalse("inactive@example.com")).thenReturn(Optional.of(user));
 
         UserDetails details = service.loadUserByUsername("inactive@example.com");
 

@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -25,6 +26,7 @@ public class QaServiceCatalogController {
     private final QaServiceCatalogService qaServiceCatalogService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('QA_SERVICE_WRITE')")
     @Operation(summary = "Create a QA service")
     public ResponseEntity<QaServiceResponse> create(@Valid @RequestBody CreateQaServiceRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -32,6 +34,7 @@ public class QaServiceCatalogController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('QA_SERVICE_WRITE')")
     @Operation(summary = "Update a QA service")
     public ResponseEntity<QaServiceResponse> update(
             @PathVariable UUID id,
@@ -40,12 +43,14 @@ public class QaServiceCatalogController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('QA_SERVICE_READ')")
     @Operation(summary = "Get a QA service by ID")
     public ResponseEntity<QaServiceResponse> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(qaServiceCatalogService.getById(id));
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('QA_SERVICE_READ')")
     @Operation(summary = "List QA services")
     public ResponseEntity<Page<QaServiceResponse>> getAll(
             @RequestParam(required = false) String category,
@@ -57,6 +62,7 @@ public class QaServiceCatalogController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('QA_SERVICE_WRITE')")
     @Operation(summary = "Soft-delete a QA service")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         qaServiceCatalogService.delete(id);

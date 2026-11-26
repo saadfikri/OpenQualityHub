@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -26,6 +27,7 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "List notifications for the current user")
     public ResponseEntity<Page<NotificationResponse>> list(
             Authentication auth,
@@ -35,6 +37,7 @@ public class NotificationController {
     }
 
     @GetMapping("/unread-count")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get unread notification count")
     public ResponseEntity<Long> unreadCount(Authentication auth) {
         UUID userId = ((UserPrincipal) auth.getPrincipal()).getId();
@@ -42,6 +45,7 @@ public class NotificationController {
     }
 
     @PutMapping("/{id}/read")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Mark a notification as read")
     public ResponseEntity<Void> markAsRead(@PathVariable UUID id, Authentication auth) {
         UUID userId = ((UserPrincipal) auth.getPrincipal()).getId();
@@ -50,6 +54,7 @@ public class NotificationController {
     }
 
     @PutMapping("/read-all")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Mark all notifications as read")
     public ResponseEntity<Void> markAllRead(Authentication auth) {
         UUID userId = ((UserPrincipal) auth.getPrincipal()).getId();
@@ -58,6 +63,7 @@ public class NotificationController {
     }
 
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "SSE stream for real-time notifications")
     public SseEmitter stream(Authentication auth) {
         UUID userId = ((UserPrincipal) auth.getPrincipal()).getId();

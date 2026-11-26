@@ -100,6 +100,7 @@ class JwtAuthenticationFilterTest {
         when(jwtService.extractClaims(token)).thenReturn(claims);
 
         UserPrincipal userPrincipal = mock(UserPrincipal.class);
+        when(userPrincipal.isEnabled()).thenReturn(true);
         doReturn(Collections.singletonList(new SimpleGrantedAuthority("TEAM_READ")))
             .when(userPrincipal).getAuthorities();
         when(userDetailsService.loadUserByUsername(email)).thenReturn(userPrincipal);
@@ -153,6 +154,7 @@ class JwtAuthenticationFilterTest {
         when(jwtService.extractClaims(token)).thenReturn(claims);
 
         UserPrincipal userPrincipal = mock(UserPrincipal.class);
+        when(userPrincipal.isEnabled()).thenReturn(true);
         doReturn(Collections.singletonList(new SimpleGrantedAuthority("ADMIN")))
             .when(userPrincipal).getAuthorities();
         when(userDetailsService.loadUserByUsername(email)).thenReturn(userPrincipal);

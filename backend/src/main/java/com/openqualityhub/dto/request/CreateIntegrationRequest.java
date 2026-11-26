@@ -24,6 +24,8 @@ public class CreateIntegrationRequest {
     @NotBlank(message = "Provider is required")
     private String provider;
 
+    @NotBlank(message = "Webhook secret is required for secure webhook processing")
+    @Size(max = 500, message = "Webhook secret must not exceed 500 characters")
     private String webhookSecret;
 
     private UUID projectId;

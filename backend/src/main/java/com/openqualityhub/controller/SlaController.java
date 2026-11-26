@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,6 +27,7 @@ public class SlaController {
     private final SlaService slaService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('SLA_WRITE')")
     @Operation(summary = "Create an SLA configuration")
     public ResponseEntity<SlaConfigurationResponse> create(@Valid @RequestBody CreateSlaConfigurationRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -33,6 +35,7 @@ public class SlaController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('SLA_WRITE')")
     @Operation(summary = "Update an SLA configuration")
     public ResponseEntity<SlaConfigurationResponse> update(
             @PathVariable UUID id,
@@ -41,12 +44,14 @@ public class SlaController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('SLA_READ')")
     @Operation(summary = "Get an SLA configuration by ID")
     public ResponseEntity<SlaConfigurationResponse> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(slaService.getById(id));
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('SLA_READ')")
     @Operation(summary = "List SLA configurations")
     public ResponseEntity<Page<SlaConfigurationResponse>> getAll(
             @PageableDefault(size = 20) Pageable pageable) {
@@ -54,12 +59,14 @@ public class SlaController {
     }
 
     @GetMapping("/active")
+    @PreAuthorize("hasAuthority('SLA_READ')")
     @Operation(summary = "List active SLA configurations")
     public ResponseEntity<List<SlaConfigurationResponse>> getActive() {
         return ResponseEntity.ok(slaService.getActive());
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('SLA_WRITE')")
     @Operation(summary = "Soft-delete an SLA configuration")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         slaService.delete(id);
