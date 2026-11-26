@@ -20,16 +20,21 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+let isRedirectingToLogin = false;
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !isRedirectingToLogin) {
+      isRedirectingToLogin = true;
       localStorage.removeItem('oqh_auth');
       window.location.href = '/login';
       return Promise.reject(error);
     }
-    const message = error.response?.data?.message || error.message || 'An unexpected error occurred';
-    console.error('API Error:', message);
+    if (error.response?.status !== 401) {
+      const message = error.response?.data?.message || error.message || 'An unexpected error occurred';
+      console.error('API Error:', message);
+    }
     return Promise.reject(error);
   }
 );
