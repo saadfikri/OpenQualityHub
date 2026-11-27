@@ -19,4 +19,7 @@ public interface QualityScoreRepository extends JpaRepository<QualityScore, UUID
     java.util.List<QualityScore> findByDeletedFalse();
 
     long countByDeletedFalse();
+
+    @org.springframework.data.jpa.repository.Query("SELECT AVG(qs.overallScore) FROM QualityScore qs WHERE qs.deleted = false")
+    java.math.BigDecimal findAverageOverallScore();
 }

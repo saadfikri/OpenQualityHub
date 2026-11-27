@@ -12,8 +12,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
-import java.math.BigDecimal;
+import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Collections;
@@ -43,29 +46,41 @@ class ExportServiceImplTest {
         project.setId(projectId);
     }
 
+    private String exportTestRuns(UUID pid) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        exportService.exportTestRunsCsv(pid, out);
+        return out.toString(StandardCharsets.UTF_8);
+    }
+
+    private String exportDefects(UUID pid, String status) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        exportService.exportDefectsCsv(pid, status, out);
+        return out.toString(StandardCharsets.UTF_8);
+    }
+
     // --- exportTestRunsCsv ---
 
     @Test
-    void exportTestRunsCsv_withProjectId_filtersbyProject() {
-        when(testRunRepository.findByProjectIdAndDeletedFalse(projectId))
-                .thenReturn(Collections.emptyList());
+    void exportTestRunsCsv_withProjectId_filtersByProject() {
+        Page<TestRun> empty = new PageImpl<>(Collections.emptyList());
+        when(testRunRepository.findByProjectIdAndDeletedFalseOrderByExecutedAtDesc(eq(projectId), any(Pageable.class)))
+                .thenReturn(empty);
 
-        byte[] result = exportService.exportTestRunsCsv(projectId);
+        String csv = exportTestRuns(projectId);
 
-        String csv = new String(result, StandardCharsets.UTF_8);
         assertTrue(csv.startsWith("ID,Name,Source,Project,"));
-        verify(testRunRepository).findByProjectIdAndDeletedFalse(projectId);
-        verify(testRunRepository, never()).findByDeletedFalse();
+        verify(testRunRepository).findByProjectIdAndDeletedFalseOrderByExecutedAtDesc(eq(projectId), any(Pageable.class));
     }
 
     @Test
     void exportTestRunsCsv_withoutProjectId_getsAll() {
-        when(testRunRepository.findByDeletedFalse()).thenReturn(Collections.emptyList());
+        Page<TestRun> empty = new PageImpl<>(Collections.emptyList());
+        when(testRunRepository.findByDeletedFalse(any(Pageable.class))).thenReturn(empty);
 
-        byte[] result = exportService.exportTestRunsCsv(null);
+        String csv = exportTestRuns(null);
 
-        assertNotNull(result);
-        verify(testRunRepository).findByDeletedFalse();
+        assertNotNull(csv);
+        verify(testRunRepository).findByDeletedFalse(any(Pageable.class));
     }
 
     @Test
@@ -86,9 +101,10 @@ class ExportServiceImplTest {
         run.setCreatedAt(Instant.parse("2026-11-01T10:00:00Z"));
         run.setProject(project);
 
-        when(testRunRepository.findByDeletedFalse()).thenReturn(List.of(run));
+        Page<TestRun> page = new PageImpl<>(List.of(run));
+        when(testRunRepository.findByDeletedFalse(any(Pageable.class))).thenReturn(page);
 
-        String csv = new String(exportService.exportTestRunsCsv(null), StandardCharsets.UTF_8);
+        String csv = exportTestRuns(null);
         String[] lines = csv.split("\n");
 
         assertEquals(2, lines.length);
@@ -111,11 +127,11 @@ class ExportServiceImplTest {
         run.setId(UUID.randomUUID());
         run.setProject(null);
 
-        when(testRunRepository.findByDeletedFalse()).thenReturn(List.of(run));
+        Page<TestRun> page = new PageImpl<>(List.of(run));
+        when(testRunRepository.findByDeletedFalse(any(Pageable.class))).thenReturn(page);
 
-        String csv = new String(exportService.exportTestRunsCsv(null), StandardCharsets.UTF_8);
+        String csv = exportTestRuns(null);
 
-        // Should not throw NPE
         assertFalse(csv.isEmpty());
         assertTrue(csv.contains("Minimal"));
     }
@@ -130,9 +146,10 @@ class ExportServiceImplTest {
         run.setId(UUID.randomUUID());
         run.setProject(project);
 
-        when(testRunRepository.findByDeletedFalse()).thenReturn(List.of(run));
+        Page<TestRun> page = new PageImpl<>(List.of(run));
+        when(testRunRepository.findByDeletedFalse(any(Pageable.class))).thenReturn(page);
 
-        String csv = new String(exportService.exportTestRunsCsv(null), StandardCharsets.UTF_8);
+        String csv = exportTestRuns(null);
 
         assertTrue(csv.contains("\"Run with, comma\""));
     }
@@ -147,9 +164,10 @@ class ExportServiceImplTest {
         run.setId(UUID.randomUUID());
         run.setProject(project);
 
-        when(testRunRepository.findByDeletedFalse()).thenReturn(List.of(run));
+        Page<TestRun> page = new PageImpl<>(List.of(run));
+        when(testRunRepository.findByDeletedFalse(any(Pageable.class))).thenReturn(page);
 
-        String csv = new String(exportService.exportTestRunsCsv(null), StandardCharsets.UTF_8);
+        String csv = exportTestRuns(null);
 
         assertTrue(csv.contains("\"Run \"\"quoted\"\"\""));
     }
@@ -165,9 +183,10 @@ class ExportServiceImplTest {
         run.setId(UUID.randomUUID());
         run.setProject(project);
 
-        when(testRunRepository.findByDeletedFalse()).thenReturn(List.of(run));
+        Page<TestRun> page = new PageImpl<>(List.of(run));
+        when(testRunRepository.findByDeletedFalse(any(Pageable.class))).thenReturn(page);
 
-        String csv = new String(exportService.exportTestRunsCsv(null), StandardCharsets.UTF_8);
+        String csv = exportTestRuns(null);
 
         assertTrue(csv.contains("\"line1\nline2\""));
     }
@@ -176,42 +195,46 @@ class ExportServiceImplTest {
 
     @Test
     void exportDefectsCsv_bothProjectIdAndStatus() {
-        when(defectRepository.findAllByProjectIdAndStatusAndDeletedFalse(eq(projectId), eq(Defect.DefectStatus.OPEN)))
-                .thenReturn(Collections.emptyList());
+        Page<Defect> empty = new PageImpl<>(Collections.emptyList());
+        when(defectRepository.findByProjectIdAndStatusAndDeletedFalse(eq(projectId), eq(Defect.DefectStatus.OPEN), any(Pageable.class)))
+                .thenReturn(empty);
 
-        byte[] result = exportService.exportDefectsCsv(projectId, "open");
+        String csv = exportDefects(projectId, "open");
 
-        assertNotNull(result);
-        verify(defectRepository).findAllByProjectIdAndStatusAndDeletedFalse(projectId, Defect.DefectStatus.OPEN);
+        assertNotNull(csv);
+        verify(defectRepository).findByProjectIdAndStatusAndDeletedFalse(eq(projectId), eq(Defect.DefectStatus.OPEN), any(Pageable.class));
     }
 
     @Test
     void exportDefectsCsv_onlyProjectId() {
-        when(defectRepository.findAllByProjectIdAndDeletedFalse(projectId))
-                .thenReturn(Collections.emptyList());
+        Page<Defect> empty = new PageImpl<>(Collections.emptyList());
+        when(defectRepository.findByProjectIdAndDeletedFalse(eq(projectId), any(Pageable.class)))
+                .thenReturn(empty);
 
-        exportService.exportDefectsCsv(projectId, null);
+        exportDefects(projectId, null);
 
-        verify(defectRepository).findAllByProjectIdAndDeletedFalse(projectId);
+        verify(defectRepository).findByProjectIdAndDeletedFalse(eq(projectId), any(Pageable.class));
     }
 
     @Test
     void exportDefectsCsv_onlyStatus() {
-        when(defectRepository.findAllByStatusAndDeletedFalse(Defect.DefectStatus.RESOLVED))
-                .thenReturn(Collections.emptyList());
+        Page<Defect> empty = new PageImpl<>(Collections.emptyList());
+        when(defectRepository.findByStatusAndDeletedFalse(eq(Defect.DefectStatus.RESOLVED), any(Pageable.class)))
+                .thenReturn(empty);
 
-        exportService.exportDefectsCsv(null, "resolved");
+        exportDefects(null, "resolved");
 
-        verify(defectRepository).findAllByStatusAndDeletedFalse(Defect.DefectStatus.RESOLVED);
+        verify(defectRepository).findByStatusAndDeletedFalse(eq(Defect.DefectStatus.RESOLVED), any(Pageable.class));
     }
 
     @Test
     void exportDefectsCsv_noFilters() {
-        when(defectRepository.findAllByDeletedFalse()).thenReturn(Collections.emptyList());
+        Page<Defect> empty = new PageImpl<>(Collections.emptyList());
+        when(defectRepository.findByDeletedFalse(any(Pageable.class))).thenReturn(empty);
 
-        exportService.exportDefectsCsv(null, null);
+        exportDefects(null, null);
 
-        verify(defectRepository).findAllByDeletedFalse();
+        verify(defectRepository).findByDeletedFalse(any(Pageable.class));
     }
 
     @Test
@@ -233,9 +256,10 @@ class ExportServiceImplTest {
         defect.setCreatedAt(Instant.parse("2026-11-01T10:00:00Z"));
         defect.setUpdatedAt(Instant.parse("2026-11-02T10:00:00Z"));
 
-        when(defectRepository.findAllByDeletedFalse()).thenReturn(List.of(defect));
+        Page<Defect> page = new PageImpl<>(List.of(defect));
+        when(defectRepository.findByDeletedFalse(any(Pageable.class))).thenReturn(page);
 
-        String csv = new String(exportService.exportDefectsCsv(null, null), StandardCharsets.UTF_8);
+        String csv = exportDefects(null, null);
         String[] lines = csv.split("\n");
 
         assertEquals(2, lines.length);
@@ -259,9 +283,10 @@ class ExportServiceImplTest {
                 .build();
         defect.setId(UUID.randomUUID());
 
-        when(defectRepository.findAllByDeletedFalse()).thenReturn(List.of(defect));
+        Page<Defect> page = new PageImpl<>(List.of(defect));
+        when(defectRepository.findByDeletedFalse(any(Pageable.class))).thenReturn(page);
 
-        String csv = new String(exportService.exportDefectsCsv(null, null), StandardCharsets.UTF_8);
+        String csv = exportDefects(null, null);
 
         assertFalse(csv.isEmpty());
         assertTrue(csv.contains("Bug"));
@@ -269,11 +294,12 @@ class ExportServiceImplTest {
 
     @Test
     void exportDefectsCsv_statusCaseInsensitive() {
-        when(defectRepository.findAllByStatusAndDeletedFalse(Defect.DefectStatus.IN_PROGRESS))
-                .thenReturn(Collections.emptyList());
+        Page<Defect> empty = new PageImpl<>(Collections.emptyList());
+        when(defectRepository.findByStatusAndDeletedFalse(eq(Defect.DefectStatus.IN_PROGRESS), any(Pageable.class)))
+                .thenReturn(empty);
 
-        exportService.exportDefectsCsv(null, "in_progress");
+        exportDefects(null, "in_progress");
 
-        verify(defectRepository).findAllByStatusAndDeletedFalse(Defect.DefectStatus.IN_PROGRESS);
+        verify(defectRepository).findByStatusAndDeletedFalse(eq(Defect.DefectStatus.IN_PROGRESS), any(Pageable.class));
     }
 }

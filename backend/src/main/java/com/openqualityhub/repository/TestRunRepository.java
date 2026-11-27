@@ -70,4 +70,10 @@ public interface TestRunRepository extends JpaRepository<TestRun, UUID> {
            "FROM test_runs WHERE executed_at >= :since AND is_deleted = false AND project_id = :projectId " +
            "GROUP BY DATE(executed_at) ORDER BY day", nativeQuery = true)
     List<Object[]> findDailyTestVolumeByProject(Instant since, UUID projectId);
+
+    @Query("SELECT tr.project.id, AVG(tr.passRate) FROM TestRun tr WHERE tr.deleted = false GROUP BY tr.project.id")
+    List<Object[]> findAveragePassRateGroupedByProject();
+
+    @Query("SELECT tr.project.id, COUNT(tr) FROM TestRun tr WHERE tr.deleted = false GROUP BY tr.project.id")
+    List<Object[]> countGroupedByProject();
 }

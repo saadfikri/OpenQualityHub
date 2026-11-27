@@ -1,10 +1,11 @@
 package com.openqualityhub.service;
 
+import java.io.OutputStream;
 import java.util.UUID;
 
 public interface ExportService {
 
-    byte[] exportTestRunsCsv(UUID projectId);
+    void exportTestRunsCsv(UUID projectId, OutputStream out);
 
-    byte[] exportDefectsCsv(UUID projectId, String status);
+    void exportDefectsCsv(UUID projectId, String status, OutputStream out);
 }

@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,14 @@ public class JwtService {
 
     @Value("${app.security.jwt.refresh-expiration-ms:604800000}")
     private long refreshExpirationMs;
+
+    private SecretKey signingKey;
+
+    @PostConstruct
+    void initSigningKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+        this.signingKey = Keys.hmacShaKeyFor(keyBytes);
+    }
 
     public String generateAccessToken(UUID userId, String email, String organizationId, java.util.Collection<String> permissions) {
         return Jwts.builder()
@@ -67,7 +76,6 @@ public class JwtService {
     }
 
     private SecretKey getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
-        return Keys.hmacShaKeyFor(keyBytes);
+        return signingKey;
     }
 }

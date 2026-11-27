@@ -45,6 +45,15 @@ public interface DefectRepository extends JpaRepository<Defect, UUID> {
 
     long countBySeverityAndDeletedFalse(Defect.Severity severity);
 
+    @Query("SELECT d.status, COUNT(d) FROM Defect d WHERE d.deleted = false GROUP BY d.status")
+    List<Object[]> countGroupedByStatus();
+
+    @Query("SELECT d.severity, COUNT(d) FROM Defect d WHERE d.deleted = false GROUP BY d.severity")
+    List<Object[]> countGroupedBySeverity();
+
+    @Query(value = "SELECT project_id, COUNT(*) FROM defects WHERE is_deleted = false AND status NOT IN ('CLOSED', 'RESOLVED') GROUP BY project_id", nativeQuery = true)
+    List<Object[]> countOpenGroupedByProject();
+
     long countByReleaseIdAndSeverityAndStatusNotAndDeletedFalse(UUID releaseId, Defect.Severity severity, Defect.DefectStatus excludedStatus);
 
     @Query("SELECT COUNT(d) FROM Defect d WHERE d.release.id = :releaseId AND d.status NOT IN ('CLOSED', 'RESOLVED') AND d.deleted = false")

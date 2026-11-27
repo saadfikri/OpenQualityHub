@@ -21,7 +21,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,7 +57,6 @@ class DashboardServiceImplTest {
 
     @Test
     void getDashboard_shouldReturnSummaryStats() {
-        // Summary stats
         when(teamRepository.countByDeletedFalse()).thenReturn(4L);
         when(projectRepository.countByDeletedFalse()).thenReturn(8L);
         when(testRunRepository.countByDeletedFalse()).thenReturn(240L);
@@ -66,31 +64,13 @@ class DashboardServiceImplTest {
         when(defectRepository.countByDeletedFalse()).thenReturn(44L);
         when(defectRepository.countByStatusNotInAndDeletedFalse(any())).thenReturn(20L);
         when(testRunRepository.findAveragePassRate()).thenReturn(new BigDecimal("87.50"));
-        when(qualityScoreRepository.findByDeletedFalse()).thenReturn(List.of());
-        when(qualityScoreRepository.countByDeletedFalse()).thenReturn(0L);
+        when(qualityScoreRepository.findAverageOverallScore()).thenReturn(null);
         when(testIdentityRepository.countAllFlaky()).thenReturn(5L);
 
-        // Pass rate trend
-        when(testRunRepository.findDailyPassRateTrend(any(Instant.class))).thenReturn(List.of());
-
-        // Project health
-        when(projectRepository.findByDeletedFalse()).thenReturn(List.of(project));
-        when(testRunRepository.findAveragePassRateByProjectId(projectId)).thenReturn(new BigDecimal("90.00"));
-        when(qualityScoreRepository.findFirstByProjectIdOrderByCalculatedAtDesc(projectId)).thenReturn(Optional.empty());
-        when(defectRepository.countOpenByProjectId(projectId)).thenReturn(3L);
-        when(testRunRepository.countByProjectIdAndDeletedFalse(projectId)).thenReturn(50L);
-
-        // Defects by status & severity
-        for (Defect.DefectStatus status : Defect.DefectStatus.values()) {
-            when(defectRepository.countByStatusAndDeletedFalse(status)).thenReturn(5L);
-        }
-        for (Defect.Severity severity : Defect.Severity.values()) {
-            when(defectRepository.countBySeverityAndDeletedFalse(severity)).thenReturn(10L);
-        }
-
-        // Recent test runs
-        when(testRunRepository.findByDeletedFalseOrderByExecutedAtDesc(any(Pageable.class)))
-            .thenReturn(new PageImpl<>(List.of()));
+        stubTrend();
+        stubProjectHealth();
+        stubDefectCounts();
+        stubRecentRuns();
 
         DashboardResponse result = dashboardService.getDashboard();
 
@@ -113,12 +93,18 @@ class DashboardServiceImplTest {
         stubRecentRuns();
 
         when(projectRepository.findByDeletedFalse()).thenReturn(List.of(project));
-        when(testRunRepository.findAveragePassRateByProjectId(projectId)).thenReturn(new BigDecimal("92.50"));
+        Object[] passRateRow = {projectId, new BigDecimal("92.50")};
+        when(testRunRepository.findAveragePassRateGroupedByProject())
+            .thenReturn(List.<Object[]>of(passRateRow));
+        Object[] countRow = {projectId, 30L};
+        when(testRunRepository.countGroupedByProject())
+            .thenReturn(List.<Object[]>of(countRow));
+        Object[] openRow = {projectId, 5L};
+        when(defectRepository.countOpenGroupedByProject())
+            .thenReturn(List.<Object[]>of(openRow));
         QualityScore qs = QualityScore.builder().overallScore(new BigDecimal("85.00")).build();
         when(qualityScoreRepository.findFirstByProjectIdOrderByCalculatedAtDesc(projectId))
             .thenReturn(Optional.of(qs));
-        when(defectRepository.countOpenByProjectId(projectId)).thenReturn(5L);
-        when(testRunRepository.countByProjectIdAndDeletedFalse(projectId)).thenReturn(30L);
 
         DashboardResponse result = dashboardService.getDashboard();
 
@@ -140,14 +126,13 @@ class DashboardServiceImplTest {
         stubProjectHealth();
         stubRecentRuns();
 
-        when(defectRepository.countByStatusAndDeletedFalse(Defect.DefectStatus.OPEN)).thenReturn(10L);
-        when(defectRepository.countByStatusAndDeletedFalse(Defect.DefectStatus.IN_PROGRESS)).thenReturn(5L);
-        when(defectRepository.countByStatusAndDeletedFalse(Defect.DefectStatus.RESOLVED)).thenReturn(15L);
-        when(defectRepository.countByStatusAndDeletedFalse(Defect.DefectStatus.CLOSED)).thenReturn(20L);
-        when(defectRepository.countByStatusAndDeletedFalse(Defect.DefectStatus.REOPENED)).thenReturn(2L);
-        for (Defect.Severity severity : Defect.Severity.values()) {
-            when(defectRepository.countBySeverityAndDeletedFalse(severity)).thenReturn(0L);
-        }
+        Object[] s1 = {Defect.DefectStatus.OPEN, 10L};
+        Object[] s2 = {Defect.DefectStatus.IN_PROGRESS, 5L};
+        Object[] s3 = {Defect.DefectStatus.RESOLVED, 15L};
+        Object[] s4 = {Defect.DefectStatus.CLOSED, 20L};
+        Object[] s5 = {Defect.DefectStatus.REOPENED, 2L};
+        when(defectRepository.countGroupedByStatus()).thenReturn(List.of(s1, s2, s3, s4, s5));
+        when(defectRepository.countGroupedBySeverity()).thenReturn(List.of());
 
         DashboardResponse result = dashboardService.getDashboard();
 
@@ -165,14 +150,13 @@ class DashboardServiceImplTest {
         stubTrend();
         stubProjectHealth();
         stubRecentRuns();
-        for (Defect.DefectStatus status : Defect.DefectStatus.values()) {
-            when(defectRepository.countByStatusAndDeletedFalse(status)).thenReturn(0L);
-        }
 
-        when(defectRepository.countBySeverityAndDeletedFalse(Defect.Severity.CRITICAL)).thenReturn(3L);
-        when(defectRepository.countBySeverityAndDeletedFalse(Defect.Severity.HIGH)).thenReturn(8L);
-        when(defectRepository.countBySeverityAndDeletedFalse(Defect.Severity.MEDIUM)).thenReturn(15L);
-        when(defectRepository.countBySeverityAndDeletedFalse(Defect.Severity.LOW)).thenReturn(20L);
+        when(defectRepository.countGroupedByStatus()).thenReturn(List.of());
+        Object[] sv1 = {Defect.Severity.CRITICAL, 3L};
+        Object[] sv2 = {Defect.Severity.HIGH, 8L};
+        Object[] sv3 = {Defect.Severity.MEDIUM, 15L};
+        Object[] sv4 = {Defect.Severity.LOW, 20L};
+        when(defectRepository.countGroupedBySeverity()).thenReturn(List.of(sv1, sv2, sv3, sv4));
 
         DashboardResponse result = dashboardService.getDashboard();
 
@@ -227,17 +211,12 @@ class DashboardServiceImplTest {
         when(defectRepository.countByDeletedFalse()).thenReturn(0L);
         when(defectRepository.countByStatusNotInAndDeletedFalse(any())).thenReturn(0L);
         when(testRunRepository.findAveragePassRate()).thenReturn(null);
-        when(qualityScoreRepository.findByDeletedFalse()).thenReturn(List.of());
-        when(qualityScoreRepository.countByDeletedFalse()).thenReturn(0L);
+        when(qualityScoreRepository.findAverageOverallScore()).thenReturn(null);
         when(testIdentityRepository.countAllFlaky()).thenReturn(0L);
         when(testRunRepository.findDailyPassRateTrend(any(Instant.class))).thenReturn(List.of());
         when(projectRepository.findByDeletedFalse()).thenReturn(List.of());
-        for (Defect.DefectStatus status : Defect.DefectStatus.values()) {
-            when(defectRepository.countByStatusAndDeletedFalse(status)).thenReturn(0L);
-        }
-        for (Defect.Severity severity : Defect.Severity.values()) {
-            when(defectRepository.countBySeverityAndDeletedFalse(severity)).thenReturn(0L);
-        }
+        when(defectRepository.countGroupedByStatus()).thenReturn(List.of());
+        when(defectRepository.countGroupedBySeverity()).thenReturn(List.of());
         when(testRunRepository.findByDeletedFalseOrderByExecutedAtDesc(any(Pageable.class)))
             .thenReturn(new PageImpl<>(List.of()));
 
@@ -247,7 +226,7 @@ class DashboardServiceImplTest {
         assertEquals(BigDecimal.ZERO, result.getSummary().getAveragePassRate());
     }
 
-    // --- Helpers to stub commonly needed calls ---
+    // --- Helpers ---
 
     private void stubSummary() {
         when(teamRepository.countByDeletedFalse()).thenReturn(1L);
@@ -257,8 +236,7 @@ class DashboardServiceImplTest {
         when(defectRepository.countByDeletedFalse()).thenReturn(10L);
         when(defectRepository.countByStatusNotInAndDeletedFalse(any())).thenReturn(5L);
         when(testRunRepository.findAveragePassRate()).thenReturn(new BigDecimal("85.00"));
-        when(qualityScoreRepository.findByDeletedFalse()).thenReturn(List.of());
-        when(qualityScoreRepository.countByDeletedFalse()).thenReturn(0L);
+        when(qualityScoreRepository.findAverageOverallScore()).thenReturn(new BigDecimal("80.00"));
         when(testIdentityRepository.countAllFlaky()).thenReturn(0L);
     }
 
@@ -268,19 +246,15 @@ class DashboardServiceImplTest {
 
     private void stubProjectHealth() {
         when(projectRepository.findByDeletedFalse()).thenReturn(List.of(project));
-        when(testRunRepository.findAveragePassRateByProjectId(projectId)).thenReturn(null);
+        when(testRunRepository.findAveragePassRateGroupedByProject()).thenReturn(List.of());
+        when(testRunRepository.countGroupedByProject()).thenReturn(List.of());
+        when(defectRepository.countOpenGroupedByProject()).thenReturn(List.of());
         when(qualityScoreRepository.findFirstByProjectIdOrderByCalculatedAtDesc(projectId)).thenReturn(Optional.empty());
-        when(defectRepository.countOpenByProjectId(projectId)).thenReturn(0L);
-        when(testRunRepository.countByProjectIdAndDeletedFalse(projectId)).thenReturn(0L);
     }
 
     private void stubDefectCounts() {
-        for (Defect.DefectStatus status : Defect.DefectStatus.values()) {
-            when(defectRepository.countByStatusAndDeletedFalse(status)).thenReturn(0L);
-        }
-        for (Defect.Severity severity : Defect.Severity.values()) {
-            when(defectRepository.countBySeverityAndDeletedFalse(severity)).thenReturn(0L);
-        }
+        when(defectRepository.countGroupedByStatus()).thenReturn(List.of());
+        when(defectRepository.countGroupedBySeverity()).thenReturn(List.of());
     }
 
     private void stubRecentRuns() {

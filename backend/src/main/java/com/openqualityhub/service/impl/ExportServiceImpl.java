@@ -7,11 +7,17 @@ import com.openqualityhub.repository.TestRunRepository;
 import com.openqualityhub.service.ExportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -20,74 +26,98 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class ExportServiceImpl implements ExportService {
 
+    private static final int PAGE_SIZE = 500;
+
     private final TestRunRepository testRunRepository;
     private final DefectRepository defectRepository;
 
     @Override
-    public byte[] exportTestRunsCsv(UUID projectId) {
-        List<TestRun> runs;
-        if (projectId != null) {
-            runs = testRunRepository.findByProjectIdAndDeletedFalse(projectId);
-        } else {
-            runs = testRunRepository.findByDeletedFalse();
+    public void exportTestRunsCsv(UUID projectId, OutputStream out) {
+        try (Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8)) {
+            writer.write("ID,Name,Source,Project,Total Tests,Passed,Failed,Skipped,Pass Rate,Duration (ms),Environment,Commit SHA,Branch,Created At\n");
+
+            int page = 0;
+            long total = 0;
+            Page<TestRun> slice;
+            do {
+                PageRequest pageRequest = PageRequest.of(page, PAGE_SIZE, Sort.by("createdAt"));
+                if (projectId != null) {
+                    slice = testRunRepository.findByProjectIdAndDeletedFalseOrderByExecutedAtDesc(projectId, pageRequest);
+                } else {
+                    slice = testRunRepository.findByDeletedFalse(pageRequest);
+                }
+
+                for (TestRun run : slice.getContent()) {
+                    writer.write(escapeCsv(run.getId().toString())); writer.write(',');
+                    writer.write(escapeCsv(run.getName())); writer.write(',');
+                    writer.write(escapeCsv(run.getSource().name())); writer.write(',');
+                    writer.write(escapeCsv(run.getProject() != null ? run.getProject().getName() : "")); writer.write(',');
+                    writer.write(String.valueOf(run.getTotalTests())); writer.write(',');
+                    writer.write(String.valueOf(run.getPassed())); writer.write(',');
+                    writer.write(String.valueOf(run.getFailed())); writer.write(',');
+                    writer.write(String.valueOf(run.getSkipped())); writer.write(',');
+                    writer.write(run.getPassRate() != null ? run.getPassRate().toString() : ""); writer.write(',');
+                    writer.write(run.getDurationMs() != null ? run.getDurationMs().toString() : ""); writer.write(',');
+                    writer.write(escapeCsv(run.getEnvironment() != null ? run.getEnvironment() : "")); writer.write(',');
+                    writer.write(escapeCsv(run.getCommitSha() != null ? run.getCommitSha() : "")); writer.write(',');
+                    writer.write(escapeCsv(run.getBranch() != null ? run.getBranch() : "")); writer.write(',');
+                    writer.write(escapeCsv(run.getCreatedAt() != null ? run.getCreatedAt().toString() : "")); writer.write('\n');
+                }
+
+                total += slice.getNumberOfElements();
+                page++;
+                writer.flush();
+            } while (slice.hasNext());
+
+            log.info("Streamed {} test runs as CSV (projectId={})", total, projectId);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to export test runs CSV", e);
         }
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("ID,Name,Source,Project,Total Tests,Passed,Failed,Skipped,Pass Rate,Duration (ms),Environment,Commit SHA,Branch,Created At\n");
-
-        for (TestRun run : runs) {
-            sb.append(escapeCsv(run.getId().toString())).append(',');
-            sb.append(escapeCsv(run.getName())).append(',');
-            sb.append(escapeCsv(run.getSource().name())).append(',');
-            sb.append(escapeCsv(run.getProject() != null ? run.getProject().getName() : "")).append(',');
-            sb.append(run.getTotalTests()).append(',');
-            sb.append(run.getPassed()).append(',');
-            sb.append(run.getFailed()).append(',');
-            sb.append(run.getSkipped()).append(',');
-            sb.append(run.getPassRate() != null ? run.getPassRate() : "").append(',');
-            sb.append(run.getDurationMs() != null ? run.getDurationMs() : "").append(',');
-            sb.append(escapeCsv(run.getEnvironment() != null ? run.getEnvironment() : "")).append(',');
-            sb.append(escapeCsv(run.getCommitSha() != null ? run.getCommitSha() : "")).append(',');
-            sb.append(escapeCsv(run.getBranch() != null ? run.getBranch() : "")).append(',');
-            sb.append(escapeCsv(run.getCreatedAt() != null ? run.getCreatedAt().toString() : "")).append('\n');
-        }
-
-        log.info("Exported {} test runs as CSV (projectId={})", runs.size(), projectId);
-        return sb.toString().getBytes(StandardCharsets.UTF_8);
     }
 
     @Override
-    public byte[] exportDefectsCsv(UUID projectId, String status) {
-        List<Defect> defects;
-        if (projectId != null && status != null) {
-            Defect.DefectStatus defectStatus = Defect.DefectStatus.valueOf(status.toUpperCase());
-            defects = defectRepository.findAllByProjectIdAndStatusAndDeletedFalse(projectId, defectStatus);
-        } else if (projectId != null) {
-            defects = defectRepository.findAllByProjectIdAndDeletedFalse(projectId);
-        } else if (status != null) {
-            Defect.DefectStatus defectStatus = Defect.DefectStatus.valueOf(status.toUpperCase());
-            defects = defectRepository.findAllByStatusAndDeletedFalse(defectStatus);
-        } else {
-            defects = defectRepository.findAllByDeletedFalse();
+    public void exportDefectsCsv(UUID projectId, String status, OutputStream out) {
+        try (Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8)) {
+            writer.write("ID,Title,Severity,Status,Project,Reported By,Assigned To,Created At,Updated At\n");
+
+            int page = 0;
+            long total = 0;
+            Page<Defect> slice;
+            do {
+                PageRequest pageRequest = PageRequest.of(page, PAGE_SIZE, Sort.by("createdAt"));
+                if (projectId != null && status != null) {
+                    Defect.DefectStatus defectStatus = Defect.DefectStatus.valueOf(status.toUpperCase());
+                    slice = defectRepository.findByProjectIdAndStatusAndDeletedFalse(projectId, defectStatus, pageRequest);
+                } else if (projectId != null) {
+                    slice = defectRepository.findByProjectIdAndDeletedFalse(projectId, pageRequest);
+                } else if (status != null) {
+                    Defect.DefectStatus defectStatus = Defect.DefectStatus.valueOf(status.toUpperCase());
+                    slice = defectRepository.findByStatusAndDeletedFalse(defectStatus, pageRequest);
+                } else {
+                    slice = defectRepository.findByDeletedFalse(pageRequest);
+                }
+
+                for (Defect defect : slice.getContent()) {
+                    writer.write(escapeCsv(defect.getId().toString())); writer.write(',');
+                    writer.write(escapeCsv(defect.getTitle())); writer.write(',');
+                    writer.write(escapeCsv(defect.getSeverity().name())); writer.write(',');
+                    writer.write(escapeCsv(defect.getStatus().name())); writer.write(',');
+                    writer.write(escapeCsv(defect.getProject() != null ? defect.getProject().getName() : "")); writer.write(',');
+                    writer.write(escapeCsv(defect.getReportedBy() != null ? defect.getReportedBy().getDisplayName() : "")); writer.write(',');
+                    writer.write(escapeCsv(defect.getAssignedTo() != null ? defect.getAssignedTo().getDisplayName() : "")); writer.write(',');
+                    writer.write(escapeCsv(defect.getCreatedAt() != null ? defect.getCreatedAt().toString() : "")); writer.write(',');
+                    writer.write(escapeCsv(defect.getUpdatedAt() != null ? defect.getUpdatedAt().toString() : "")); writer.write('\n');
+                }
+
+                total += slice.getNumberOfElements();
+                page++;
+                writer.flush();
+            } while (slice.hasNext());
+
+            log.info("Streamed {} defects as CSV (projectId={}, status={})", total, projectId, status);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to export defects CSV", e);
         }
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("ID,Title,Severity,Status,Project,Reported By,Assigned To,Created At,Updated At\n");
-
-        for (Defect defect : defects) {
-            sb.append(escapeCsv(defect.getId().toString())).append(',');
-            sb.append(escapeCsv(defect.getTitle())).append(',');
-            sb.append(escapeCsv(defect.getSeverity().name())).append(',');
-            sb.append(escapeCsv(defect.getStatus().name())).append(',');
-            sb.append(escapeCsv(defect.getProject() != null ? defect.getProject().getName() : "")).append(',');
-            sb.append(escapeCsv(defect.getReportedBy() != null ? defect.getReportedBy().getDisplayName() : "")).append(',');
-            sb.append(escapeCsv(defect.getAssignedTo() != null ? defect.getAssignedTo().getDisplayName() : "")).append(',');
-            sb.append(escapeCsv(defect.getCreatedAt() != null ? defect.getCreatedAt().toString() : "")).append(',');
-            sb.append(escapeCsv(defect.getUpdatedAt() != null ? defect.getUpdatedAt().toString() : "")).append('\n');
-        }
-
-        log.info("Exported {} defects as CSV (projectId={}, status={})", defects.size(), projectId, status);
-        return sb.toString().getBytes(StandardCharsets.UTF_8);
     }
 
     private String escapeCsv(String value) {

@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.util.UUID;
 
@@ -23,25 +24,25 @@ public class ExportController {
     @GetMapping("/test-runs")
     @PreAuthorize("hasAuthority('TEST_RUN_READ')")
     @Operation(summary = "Export test runs as CSV")
-    public ResponseEntity<byte[]> exportTestRuns(
+    public ResponseEntity<StreamingResponseBody> exportTestRuns(
             @RequestParam(required = false) UUID projectId) {
-        byte[] csv = exportService.exportTestRunsCsv(projectId);
+        StreamingResponseBody body = out -> exportService.exportTestRunsCsv(projectId, out);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=test-runs.csv")
                 .contentType(MediaType.parseMediaType("text/csv"))
-                .body(csv);
+                .body(body);
     }
 
     @GetMapping("/defects")
     @PreAuthorize("hasAuthority('DEFECT_READ')")
     @Operation(summary = "Export defects as CSV")
-    public ResponseEntity<byte[]> exportDefects(
+    public ResponseEntity<StreamingResponseBody> exportDefects(
             @RequestParam(required = false) UUID projectId,
             @RequestParam(required = false) String status) {
-        byte[] csv = exportService.exportDefectsCsv(projectId, status);
+        StreamingResponseBody body = out -> exportService.exportDefectsCsv(projectId, status, out);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=defects.csv")
                 .contentType(MediaType.parseMediaType("text/csv"))
-                .body(csv);
+                .body(body);
     }
 }

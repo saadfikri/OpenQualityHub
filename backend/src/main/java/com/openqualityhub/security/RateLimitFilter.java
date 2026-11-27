@@ -1,6 +1,8 @@
 package com.openqualityhub.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,7 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
@@ -31,7 +33,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final int exportLimit;
     private final int generateLimit;
     private final int defaultLimit;
-    private final ConcurrentHashMap<String, SlidingWindow> windows = new ConcurrentHashMap<>();
+    private final Cache<String, SlidingWindow> windows;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public RateLimitFilter(
@@ -43,6 +45,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
         this.exportLimit = exportLimit;
         this.generateLimit = generateLimit;
         this.defaultLimit = defaultLimit;
+        this.windows = Caffeine.newBuilder()
+            .maximumSize(10_000)
+            .expireAfterAccess(2, TimeUnit.MINUTES)
+            .build();
     }
 
     @Override
@@ -57,7 +63,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         int limit = resolveLimit(path);
         String clientIp = resolveClientIp(request);
         String bucketKey = clientIp + ":" + resolveBucket(path);
-        SlidingWindow window = windows.computeIfAbsent(bucketKey, k -> new SlidingWindow());
+        SlidingWindow window = windows.get(bucketKey, k -> new SlidingWindow());
 
         if (!window.tryAcquire(limit)) {
             log.warn("Rate limit exceeded for IP: {} on path: {}", clientIp, path);
@@ -102,7 +108,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         return request.getRemoteAddr();
     }
 
-    private static class SlidingWindow {
+    static class SlidingWindow {
         private final AtomicInteger count = new AtomicInteger(0);
         private volatile long windowStart = System.currentTimeMillis();
 

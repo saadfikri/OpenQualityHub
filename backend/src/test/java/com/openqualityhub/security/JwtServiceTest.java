@@ -25,6 +25,7 @@ class JwtServiceTest {
         ReflectionTestUtils.setField(jwtService, "jwtSecret", SECRET);
         ReflectionTestUtils.setField(jwtService, "jwtExpirationMs", 86400000L);
         ReflectionTestUtils.setField(jwtService, "refreshExpirationMs", 604800000L);
+        jwtService.initSigningKey();
     }
 
     @Test
@@ -96,6 +97,7 @@ class JwtServiceTest {
             "YW5vdGhlci1zZWNyZXQta2V5LWZvci10ZXN0aW5nLXB1cnBvc2VzLW11c3QtYmUtMzItYnl0ZXM=");
         ReflectionTestUtils.setField(otherService, "jwtExpirationMs", 86400000L);
         ReflectionTestUtils.setField(otherService, "refreshExpirationMs", 604800000L);
+        otherService.initSigningKey();
 
         assertFalse(otherService.isTokenValid(token));
     }
