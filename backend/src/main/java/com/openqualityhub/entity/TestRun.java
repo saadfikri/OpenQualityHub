@@ -75,6 +75,6 @@ public class TestRun extends BaseEntity {
     private List<TestCase> testCases = new ArrayList<>();
 
     public enum TestSource {
-        PLAYWRIGHT, JUNIT, WEBDRIVERIO, CYPRESS, TESTNG
+        PLAYWRIGHT, JUNIT, WEBDRIVERIO, CYPRESS, TESTNG, MAESTRO
     }
 }

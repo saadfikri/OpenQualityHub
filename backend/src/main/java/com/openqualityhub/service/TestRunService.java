@@ -20,6 +20,8 @@ public interface TestRunService {
 
     TestRunResponse importTestNGResults(UUID projectId, String name, String environment, MultipartFile file);
 
+    TestRunResponse importMaestroResults(UUID projectId, String name, String environment, MultipartFile file);
+
     TestRunDetailResponse getById(UUID id);
 
     Page<TestRunResponse> getByProjectId(UUID projectId, Pageable pageable);

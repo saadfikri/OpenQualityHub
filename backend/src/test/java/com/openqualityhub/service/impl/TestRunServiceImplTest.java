@@ -8,8 +8,12 @@ import com.openqualityhub.exception.ResourceNotFoundException;
 import com.openqualityhub.mapper.TestRunMapper;
 import com.openqualityhub.repository.ProjectRepository;
 import com.openqualityhub.repository.TestRunRepository;
+import com.openqualityhub.service.MaestroService;
 import com.openqualityhub.service.impl.parser.JUnitXmlParser;
 import com.openqualityhub.service.impl.parser.PlaywrightJsonParser;
+import com.openqualityhub.service.impl.parser.WebdriverIOJsonParser;
+import com.openqualityhub.service.impl.parser.CypressJsonParser;
+import com.openqualityhub.service.impl.parser.TestNGXmlParser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,6 +46,10 @@ class TestRunServiceImplTest {
     @Mock private TestRunMapper testRunMapper;
     @Mock private JUnitXmlParser junitParser;
     @Mock private PlaywrightJsonParser playwrightParser;
+    @Mock private WebdriverIOJsonParser webdriverIOParser;
+    @Mock private CypressJsonParser cypressParser;
+    @Mock private TestNGXmlParser testNGParser;
+    @Mock private MaestroService maestroService;
     @Mock private TestIdentityService testIdentityService;
 
     @InjectMocks
@@ -257,5 +265,17 @@ class TestRunServiceImplTest {
         assertEquals(TestRun.TestSource.PLAYWRIGHT, captor.getValue().getSource());
         assertEquals("PW Run", captor.getValue().getName());
         verify(testIdentityService).recordExecutions(any(TestRun.class));
+    }
+
+    @Test
+    void importMaestroResults_shouldDelegateToMaestroService() {
+        MultipartFile file = mock(MultipartFile.class);
+        when(maestroService.importMaestroResults(projectId, "Maestro Run", "staging", file))
+            .thenReturn(mockResponse);
+
+        TestRunResponse result = testRunService.importMaestroResults(projectId, "Maestro Run", "staging", file);
+
+        assertNotNull(result);
+        verify(maestroService).importMaestroResults(projectId, "Maestro Run", "staging", file);
     }
 }

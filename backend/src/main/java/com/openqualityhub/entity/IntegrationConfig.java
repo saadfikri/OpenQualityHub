@@ -62,6 +62,6 @@ public class IntegrationConfig extends BaseEntity {
     private List<WebhookEvent> events = new ArrayList<>();
 
     public enum Provider {
-        GITHUB, GITLAB, JENKINS, JIRA, GENERIC
+        GITHUB, GITLAB, JENKINS, JIRA, MAESTRO, GENERIC
     }
 }

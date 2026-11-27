@@ -3,7 +3,6 @@ package com.openqualityhub.service.impl;
 import com.openqualityhub.dto.response.TestRunDetailResponse;
 import com.openqualityhub.dto.response.TestRunResponse;
 import com.openqualityhub.entity.Project;
-import com.openqualityhub.entity.TestCase;
 import com.openqualityhub.entity.TestRun;
 import com.openqualityhub.exception.ResourceNotFoundException;
 import com.openqualityhub.mapper.TestRunMapper;
@@ -15,6 +14,7 @@ import com.openqualityhub.service.impl.parser.PlaywrightJsonParser;
 import com.openqualityhub.service.impl.parser.WebdriverIOJsonParser;
 import com.openqualityhub.service.impl.parser.CypressJsonParser;
 import com.openqualityhub.service.impl.parser.TestNGXmlParser;
+import com.openqualityhub.service.MaestroService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -40,6 +39,7 @@ public class TestRunServiceImpl implements TestRunService {
     private final WebdriverIOJsonParser webdriverIOParser;
     private final CypressJsonParser cypressParser;
     private final TestNGXmlParser testNGParser;
+    private final MaestroService maestroService;
     private final TestIdentityService testIdentityService;
 
     @Override
@@ -155,6 +155,12 @@ public class TestRunServiceImpl implements TestRunService {
         } catch (Exception e) {
             throw new IllegalArgumentException("Failed to parse TestNG XML: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    @Transactional
+    public TestRunResponse importMaestroResults(UUID projectId, String name, String environment, MultipartFile file) {
+        return maestroService.importMaestroResults(projectId, name, environment, file);
     }
 
     @Override

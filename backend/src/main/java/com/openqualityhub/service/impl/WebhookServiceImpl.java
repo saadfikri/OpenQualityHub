@@ -137,6 +137,7 @@ public class WebhookServiceImpl implements WebhookService {
             case JENKINS -> headers.getOrDefault("x-jenkins-event", "build_completed");
             case JIRA -> headers.getOrDefault("x-atlassian-webhook-identifier", "jira:issue_updated");
             case GENERIC -> headers.getOrDefault("x-event-type", "generic");
+            case MAESTRO -> headers.getOrDefault("x-maestro-event", "suite_complete");
         };
     }
 
@@ -146,6 +147,7 @@ public class WebhookServiceImpl implements WebhookService {
             case GITLAB -> headers.getOrDefault("x-gitlab-token", "");
             case JENKINS -> headers.getOrDefault("x-jenkins-signature", "");
             case JIRA -> headers.getOrDefault("x-hub-signature", "");
+            case MAESTRO -> headers.getOrDefault("x-maestro-signature", "");
             case GENERIC -> headers.getOrDefault("x-webhook-signature", "");
         };
     }

@@ -86,6 +86,18 @@ public class TestRunController {
             .body(testRunService.importTestNGResults(projectId, name, environment, file));
     }
 
+    @PostMapping(value = "/import/maestro", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('TEST_RUN_WRITE')")
+    @Operation(summary = "Import Maestro JSON test results")
+    public ResponseEntity<TestRunResponse> importMaestro(
+            @RequestParam UUID projectId,
+            @RequestParam String name,
+            @RequestParam(required = false) String environment,
+            @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(testRunService.importMaestroResults(projectId, name, environment, file));
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('TEST_RUN_READ')")
     @Operation(summary = "Get a test run with all test cases")
