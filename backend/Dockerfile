@@ -9,7 +9,7 @@ COPY src ./src
 RUN mvn package -DskipTests -B
 
 # ---- Runtime Stage ----
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 
 RUN addgroup -S oqh && adduser -S oqh -G oqh
