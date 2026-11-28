@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, FolderKanban, TestTube2, Database, ClipboardList, BarChart3, FileText, Rocket, Plug, GitBranch, ScrollText, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, FolderKanban, TestTube2, Database, ClipboardList, BarChart3, FileText, Rocket, Plug, GitBranch, ScrollText, Settings, LogOut, Smartphone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 
@@ -8,6 +8,7 @@ const navigation = [
   { name: 'Teams', href: '/teams', icon: Users },
   { name: 'Projects', href: '/projects', icon: FolderKanban },
   { name: 'Test Runs', href: '/test-runs', icon: TestTube2 },
+  { name: 'Maestro', href: '/maestro', icon: Smartphone },
   { name: 'Test Data', href: '/test-data', icon: Database },
   { name: 'QA Requests', href: '/qa-requests', icon: ClipboardList },
   { name: 'QA Dashboard', href: '/qa-dashboard', icon: BarChart3 },

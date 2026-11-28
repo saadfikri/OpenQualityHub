@@ -22,6 +22,8 @@ import { ContributorDetailPage } from '@/pages/contributors/ContributorDetailPag
 import { AuditTrailPage } from '@/pages/audit/AuditTrailPage';
 import { TestDataPage } from '@/pages/test-data/TestDataPage';
 import { TestDataDetailPage } from '@/pages/test-data/TestDataDetailPage';
+import MaestroPage from '@/pages/maestro/MaestroPage';
+import MaestroFlowsPage from '@/pages/maestro/MaestroFlowsPage';
 import { LoginPage } from '@/pages/auth/LoginPage';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import type { ReactNode } from 'react';
@@ -61,6 +63,8 @@ function App() {
               <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/test-runs" element={<TestRunsPage />} />
               <Route path="/test-runs/:id" element={<TestRunDetailPage />} />
+              <Route path="/maestro" element={<MaestroPage />} />
+              <Route path="/maestro/flows" element={<MaestroFlowsPage />} />
               <Route path="/qa-requests" element={<QaRequestsPage />} />
               <Route path="/qa-requests/:id" element={<QaRequestDetailPage />} />
               <Route path="/qa-dashboard" element={<QaDashboardPage />} />

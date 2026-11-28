@@ -32,7 +32,7 @@ export interface Project {
 export interface TestRun {
   id: string;
   name: string;
-  source: 'PLAYWRIGHT' | 'JUNIT' | 'WEBDRIVERIO' | 'CYPRESS' | 'TESTNG';
+  source: 'PLAYWRIGHT' | 'JUNIT' | 'WEBDRIVERIO' | 'CYPRESS' | 'TESTNG' | 'MAESTRO';
   environment: string | null;
   totalTests: number;
   passed: number;
@@ -154,6 +154,7 @@ export interface QaServiceItem {
   estimatedHours: number | null;
   active: boolean;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface QaServiceRequestItem {
@@ -542,4 +543,88 @@ export interface ContributorDetail {
   contributor: ContributorItem;
   activityBreakdown: { activityType: string; count: number }[];
   projects: { projectId: string; projectName: string }[];
+}
+
+// Maestro Mobile Testing
+export interface MaestroFlowResult {
+  id: string;
+  testRunId: string;
+  flowName: string;
+  flowFile: string | null;
+  deviceName: string | null;
+  devicePlatform: string | null;
+  osVersion: string | null;
+  deviceModel: string | null;
+  deviceLocale: string | null;
+  appId: string | null;
+  appVersion: string | null;
+  screenshotUrl: string | null;
+  videoUrl: string | null;
+  durationMs: number | null;
+  status: 'PASSED' | 'FAILED' | 'ERROR' | 'SKIPPED' | 'CANCELLED';
+  errorMessage: string | null;
+  retryCount: number;
+  createdAt: string | null;
+}
+
+export interface MaestroDeviceEntry {
+  deviceName: string;
+  osVersion: string;
+  platform: string;
+  status: string;
+  count: number;
+}
+
+export interface MaestroPlatformSummary {
+  platform: string;
+  totalFlows: number;
+  passed: number;
+  failed: number;
+  passRate: number;
+}
+
+export interface MaestroAppVersionEntry {
+  appId: string | null;
+  appVersion: string | null;
+  totalFlows: number;
+  passed: number;
+  passRate: number;
+}
+
+export interface MaestroDeviceMatrixResponse {
+  devices: MaestroDeviceEntry[];
+  platforms: MaestroPlatformSummary[];
+  appVersions: MaestroAppVersionEntry[];
+}
+
+export interface MaestroFlowSummary {
+  flowName: string;
+  status: string;
+  count: number;
+  avgDurationMs: number;
+}
+
+export interface MaestroTopFailingFlow {
+  flowName: string;
+  failureCount: number;
+}
+
+export interface MaestroFlowAnalyticsResponse {
+  totalFlows: number;
+  totalPassed: number;
+  totalFailed: number;
+  overallPassRate: number;
+  flows: MaestroFlowSummary[];
+  topFailing: MaestroTopFailingFlow[];
+}
+
+export interface MaestroDashboardResponse {
+  totalFlows: number;
+  passedFlows: number;
+  failedFlows: number;
+  passRate: number;
+  uniqueDevices: number;
+  uniqueFlowNames: number;
+  deviceMatrix: MaestroDeviceMatrixResponse;
+  flowAnalytics: MaestroFlowAnalyticsResponse;
 }
