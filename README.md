@@ -6,6 +6,7 @@
 
 One command center for test intelligence, release confidence, and cross-team QA governance.
 
+[![Release](https://img.shields.io/github/v/release/saadfikri/OpenQualityHub?color=blue)](https://github.com/saadfikri/OpenQualityHub/releases)
 [![CI](https://github.com/saadfikri/OpenQualityHub/actions/workflows/ci.yml/badge.svg)](https://github.com/saadfikri/OpenQualityHub/actions/workflows/ci.yml)
 [![Tests](https://img.shields.io/badge/tests-563%20passed-success.svg)](https://github.com/saadfikri/OpenQualityHub)
 [![E2E](https://img.shields.io/badge/E2E-52%20Playwright-blueviolet.svg)](https://github.com/saadfikri/OpenQualityHub)
@@ -76,7 +77,7 @@ Open Quality Hub brings the entire quality lifecycle into one platform:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Key numbers:** 42 entities · 40 repositories · 25 controllers · 5 Flyway migrations · 10 performance indexes
+**Key numbers:** 42 entities · 40 repositories · 25 controllers · 6 Flyway migrations · 10 performance indexes
 
 ## Tech Stack
 

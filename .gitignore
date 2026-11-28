@@ -53,7 +53,6 @@ scripts/
 .remember/
 .claude/
 PROFILE_README.md
-CHANGELOG.md
 
 # === Temp ===
 tmp/
